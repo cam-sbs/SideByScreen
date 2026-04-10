@@ -1,8 +1,10 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-const TMDB_API_TOKEN = process.env.TMDB_API_TOKEN;
-
-if (!TMDB_API_TOKEN) {
-  throw new Error("TMDB_API_TOKEN is not set in environment variables");
+function getToken(): string {
+  const token = process.env.TMDB_API_TOKEN;
+  if (!token) {
+    throw new Error("TMDB_API_TOKEN is not set in environment variables");
+  }
+  return token;
 }
 
 const cache = new Map<string, { data: unknown; expiresAt: number }>();
@@ -22,7 +24,7 @@ async function tmdbFetch<T>(path: string, params?: URLSearchParams): Promise<T> 
 
   const res = await fetch(url.toString(), {
     headers: {
-      Authorization: `Bearer ${TMDB_API_TOKEN}`,
+      Authorization: `Bearer ${getToken()}`,
       "Content-Type": "application/json",
     },
   });

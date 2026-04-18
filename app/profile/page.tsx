@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
@@ -44,6 +45,18 @@ export default async function ProfilePage() {
           initialAvatarUrl={profile?.avatar_url ?? null}
           redirectTo={isFirstTime ? "/library" : null}
         />
+
+        <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <Link
+            href="/history"
+            className="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <span>Mes films vus</span>
+            <span aria-hidden className="text-zinc-400">
+              →
+            </span>
+          </Link>
+        </div>
       </div>
     </div>
   );

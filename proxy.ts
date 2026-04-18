@@ -2,10 +2,20 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 
-const publicPaths = ["/auth/login", "/auth/signup", "/auth/callback"];
+const publicPaths = [
+  "/auth/login",
+  "/auth/signup",
+  "/auth/callback",
+  "/invite/",
+];
 
-// Routes accessibles sans groupe (profil + onboarding + logout côté /auth).
-const noGroupAllowedPrefixes = ["/onboarding", "/profile", "/auth"];
+// Routes accessibles sans groupe (profil + onboarding + logout côté /auth + invitation).
+const noGroupAllowedPrefixes = [
+  "/onboarding",
+  "/profile",
+  "/auth",
+  "/invite/",
+];
 
 export default async function proxy(request: NextRequest) {
   const response = await updateSession(request);

@@ -143,6 +143,10 @@ export interface Database {
         Args: { code: string };
         Returns: string;
       };
+      lookup_group_by_invite_code: {
+        Args: { code: string };
+        Returns: { id: string; name: string }[];
+      };
     };
     Enums: {
       notification_type: NotificationType;

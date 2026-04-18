@@ -3,12 +3,19 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+function safeNext(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
+  const next = safeNext(formData.get("next"));
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -22,7 +29,7 @@ export async function signup(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect("/profile");
+  redirect(next ? `/profile?next=${encodeURIComponent(next)}` : "/profile");
 }
 
 export async function login(formData: FormData) {
@@ -30,6 +37,7 @@ export async function login(formData: FormData) {
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const next = safeNext(formData.get("next"));
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -52,11 +60,13 @@ export async function login(formData: FormData) {
       .single();
 
     if (!profile || !profile.group_id) {
-      redirect("/onboarding");
+      // Laisse le flux d'onboarding / invite décider : l'utilisateur sans groupe
+      // qui a cliqué un lien /invite/* doit pouvoir continuer la jonction.
+      redirect(next ?? "/onboarding");
     }
   }
 
-  redirect("/library");
+  redirect(next ?? "/library");
 }
 
 export async function loginWithOAuth(provider: "google" | "apple") {

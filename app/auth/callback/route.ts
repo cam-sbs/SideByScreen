@@ -23,7 +23,7 @@ export async function GET(request: Request) {
           .single();
 
         if (!profile || !profile.group_id) {
-          return NextResponse.redirect(new URL("/profile", origin));
+          return NextResponse.redirect(new URL("/onboarding", origin));
         }
       }
 

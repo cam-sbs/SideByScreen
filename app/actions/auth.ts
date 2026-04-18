@@ -52,7 +52,7 @@ export async function login(formData: FormData) {
       .single();
 
     if (!profile || !profile.group_id) {
-      redirect("/profile");
+      redirect("/onboarding");
     }
   }
 

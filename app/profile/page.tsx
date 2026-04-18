@@ -43,7 +43,7 @@ export default async function ProfilePage() {
           email={user.email ?? ""}
           initialName={initialName}
           initialAvatarUrl={profile?.avatar_url ?? null}
-          redirectTo={isFirstTime ? "/library" : null}
+          redirectTo={isFirstTime ? "/onboarding" : null}
         />
 
         <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">

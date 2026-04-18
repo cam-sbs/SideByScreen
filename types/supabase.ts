@@ -15,16 +15,19 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          invite_code: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
+          invite_code?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
+          invite_code?: string;
           created_at?: string;
         };
       };
@@ -131,7 +134,16 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_and_join_group: {
+        Args: { group_name: string };
+        Returns: string;
+      };
+      join_group_by_code: {
+        Args: { code: string };
+        Returns: string;
+      };
+    };
     Enums: {
       notification_type: NotificationType;
     };

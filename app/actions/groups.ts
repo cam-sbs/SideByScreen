@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { mapGroupRpcError } from "@/lib/groups";
 
 type ActionResult = { error: string } | { success: true };
 
@@ -28,7 +29,7 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
   });
 
   if (error) {
-    return { error: mapRpcError(error.message) };
+    return { error: mapGroupRpcError(error.message) };
   }
 
   revalidatePath("/", "layout");
@@ -58,7 +59,7 @@ export async function joinGroup(formData: FormData): Promise<ActionResult> {
   const { error } = await supabase.rpc("join_group_by_code", { code });
 
   if (error) {
-    return { error: mapRpcError(error.message) };
+    return { error: mapGroupRpcError(error.message) };
   }
 
   revalidatePath("/", "layout");
@@ -87,24 +88,3 @@ function normalize(value: string): string | null {
   return clean.length >= 6 ? clean : null;
 }
 
-function mapRpcError(message: string): string {
-  if (message.includes("INVITE_CODE_NOT_FOUND")) {
-    return "Code d'invitation introuvable.";
-  }
-  if (message.includes("INVITE_CODE_REQUIRED")) {
-    return "Le code d'invitation est obligatoire.";
-  }
-  if (message.includes("GROUP_NAME_REQUIRED")) {
-    return "Le nom du groupe est obligatoire.";
-  }
-  if (message.includes("GROUP_NAME_TOO_LONG")) {
-    return "Le nom du groupe ne doit pas dépasser 50 caractères.";
-  }
-  if (message.includes("ALREADY_IN_GROUP")) {
-    return "Vous appartenez déjà à un groupe.";
-  }
-  if (message.includes("UNAUTHENTICATED")) {
-    return "Session expirée. Veuillez vous reconnecter.";
-  }
-  return `Une erreur est survenue : ${message}`;
-}

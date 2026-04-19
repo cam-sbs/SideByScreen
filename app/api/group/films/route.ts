@@ -16,7 +16,19 @@ export type GroupFilmCard = {
   addedBy: GroupFilmMember | null;
   taggedMembers: GroupFilmMember[];
   seenByMe: boolean;
+  releaseDate: string | null;
+  isConsensus: boolean;
 };
+
+function urgencyRank(releaseDate: string | null): 0 | 1 | 2 {
+  if (!releaseDate) return 2;
+  const release = new Date(releaseDate);
+  if (Number.isNaN(release.getTime())) return 2;
+  const diffDays = (Date.now() - release.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 14) return 2;
+  if (diffDays <= 21) return 1;
+  return 0;
+}
 
 export async function GET() {
   const supabase = await createClient();
@@ -65,6 +77,13 @@ export async function GET() {
 
   const filmIds = films.map((f) => f.id);
 
+  const { count: memberCount } = await supabase
+    .from("users")
+    .select("id", { count: "exact", head: true })
+    .eq("group_id", profile.group_id);
+
+  const totalMembers = memberCount ?? 0;
+
   const { data: tagsData } = await supabase
     .from("user_film_tags")
     .select(
@@ -102,14 +121,17 @@ export async function GET() {
     films.map(async (film) => {
       let title = `Film #${film.tmdb_id}`;
       let posterPath: string | null = null;
+      let releaseDate: string | null = null;
       try {
         const details = await getMovieDetails(film.tmdb_id);
         title = details.title;
         posterPath = details.poster_path;
+        releaseDate = details.release_date || null;
       } catch {
         // keep fallback
       }
 
+      const taggedMembers = taggedByFilm.get(film.id) ?? [];
       return {
         id: film.id,
         tmdbId: film.tmdb_id,
@@ -123,11 +145,26 @@ export async function GET() {
               avatarUrl: film.added_by.avatar_url,
             }
           : null,
-        taggedMembers: taggedByFilm.get(film.id) ?? [],
+        taggedMembers,
         seenByMe: seenByMe.has(film.id),
+        releaseDate,
+        isConsensus:
+          totalMembers > 0 && taggedMembers.length >= totalMembers,
       };
     }),
   );
+
+  cards.sort((a, b) => {
+    if (a.isConsensus !== b.isConsensus) return a.isConsensus ? -1 : 1;
+    if (a.isConsensus) {
+      const rankDiff = urgencyRank(a.releaseDate) - urgencyRank(b.releaseDate);
+      if (rankDiff !== 0) return rankDiff;
+      return (
+        new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime()
+      );
+    }
+    return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
+  });
 
   return Response.json({ films: cards });
 }

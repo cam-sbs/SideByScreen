@@ -71,7 +71,11 @@ function FilmCard({ film }: { film: GroupFilmCard }) {
   return (
     <Link
       href={`/film/${film.tmdbId}`}
-      className="group flex gap-3 overflow-hidden rounded-lg border border-zinc-200 bg-white transition-colors hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600 sm:flex-col sm:gap-0"
+      className={`group relative flex gap-3 overflow-hidden rounded-lg border bg-white transition-colors sm:flex-col sm:gap-0 dark:bg-zinc-950 ${
+        film.isConsensus
+          ? "border-amber-400 shadow-[0_0_0_2px_rgba(251,191,36,0.35)] hover:border-amber-500 dark:border-amber-500/70"
+          : "border-zinc-200 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+      }`}
     >
       <div className="relative aspect-[2/3] w-24 flex-shrink-0 bg-zinc-100 dark:bg-zinc-900 sm:w-full">
         {film.posterPath ? (
@@ -88,12 +92,17 @@ function FilmCard({ film }: { film: GroupFilmCard }) {
           </div>
         )}
 
+        {film.isConsensus && (
+          <span className="absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900 shadow">
+            Consensus
+          </span>
+        )}
         {film.seenByMe && (
           <span className="absolute right-2 top-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
             Vu
           </span>
         )}
-        {/* Emplacement pour l'indicateur d'urgence (ticket dédié) */}
+        <UrgencyBadge releaseDate={film.releaseDate} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-3">
@@ -122,6 +131,36 @@ function FilmCard({ film }: { film: GroupFilmCard }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function getUrgency(
+  releaseDate: string | null,
+): { level: "orange" | "red"; label: string } | null {
+  if (!releaseDate) return null;
+  const release = new Date(releaseDate);
+  if (Number.isNaN(release.getTime())) return null;
+  const diffDays = (Date.now() - release.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 14) return null;
+  if (diffDays <= 21) {
+    return { level: "orange", label: "À voir rapidement" };
+  }
+  return { level: "red", label: "Risque de quitter les salles" };
+}
+
+function UrgencyBadge({ releaseDate }: { releaseDate: string | null }) {
+  const urgency = getUrgency(releaseDate);
+  if (!urgency) return null;
+  const color =
+    urgency.level === "orange"
+      ? "bg-orange-500"
+      : "bg-red-600";
+  return (
+    <span
+      title={urgency.label}
+      aria-label={urgency.label}
+      className={`absolute left-2 top-2 h-3 w-3 rounded-full ${color} shadow ring-2 ring-white dark:ring-zinc-950`}
+    />
   );
 }
 

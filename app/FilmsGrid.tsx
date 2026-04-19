@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   GroupFilmCard,
   GroupFilmMember,
@@ -17,11 +18,89 @@ async function fetchFilms(): Promise<GroupFilmCard[]> {
   return payload.films;
 }
 
+type SeenFilter = "unseen" | "seen" | "all";
+type PositioningFilter =
+  | { kind: "any" }
+  | { kind: "me" }
+  | { kind: "member"; memberId: string };
+type SortKey =
+  | "default"
+  | "release-desc"
+  | "release-asc"
+  | "added-desc"
+  | "added-asc";
+
+type Filters = {
+  seen: SeenFilter;
+  positioning: PositioningFilter;
+  genreId: number | null;
+  urgencyOnly: boolean;
+  sort: SortKey;
+};
+
+const DEFAULT_FILTERS: Filters = {
+  seen: "unseen",
+  positioning: { kind: "any" },
+  genreId: null,
+  urgencyOnly: false,
+  sort: "default",
+};
+
 export function FilmsGrid() {
   const { data, isPending, isError, error } = useQuery({
     queryKey: ["group-films"],
     queryFn: fetchFilms,
   });
+
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const { members, genres } = useMemo(() => {
+    const memberMap = new Map<string, GroupFilmMember>();
+    const genreMap = new Map<number, string>();
+    for (const film of data ?? []) {
+      for (const m of film.taggedMembers) memberMap.set(m.id, m);
+      if (film.addedBy) memberMap.set(film.addedBy.id, film.addedBy);
+      for (const g of film.genres) genreMap.set(g.id, g.name);
+    }
+    return {
+      members: Array.from(memberMap.values()).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
+      genres: Array.from(genreMap.entries())
+        .map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    };
+  }, [data]);
+
+  const visible = useMemo(() => {
+    if (!data) return [];
+    const filtered = data.filter((film) => {
+      if (filters.seen === "unseen" && film.seenByMe) return false;
+      if (filters.seen === "seen" && !film.seenByMe) return false;
+
+      if (filters.positioning.kind === "me" && !film.taggedByMe) return false;
+      if (filters.positioning.kind === "member") {
+        const memberId = filters.positioning.memberId;
+        if (!film.taggedMembers.some((m) => m.id === memberId)) return false;
+      }
+
+      if (
+        filters.genreId !== null &&
+        !film.genres.some((g) => g.id === filters.genreId)
+      ) {
+        return false;
+      }
+
+      if (filters.urgencyOnly && !film.hasUrgency) return false;
+
+      return true;
+    });
+
+    return sortFilms(filtered, filters.sort);
+  }, [data, filters]);
+
+  const activeCount = countActiveFilters(filters);
 
   if (isPending) {
     return (
@@ -48,22 +127,441 @@ export function FilmsGrid() {
     );
   }
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-        Aucun film dans votre groupe pour le moment.
-      </div>
-    );
-  }
+  const isEmpty = !data || data.length === 0;
 
   return (
-    <ul className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {data.map((film) => (
-        <li key={film.id}>
-          <FilmCard film={film} />
-        </li>
+    <div className="space-y-4">
+      <FiltersBar
+        filters={filters}
+        onChange={setFilters}
+        members={members}
+        genres={genres}
+        activeCount={activeCount}
+        drawerOpen={drawerOpen}
+        setDrawerOpen={setDrawerOpen}
+      />
+
+      <ActiveFilterChips
+        filters={filters}
+        members={members}
+        genres={genres}
+        onChange={setFilters}
+      />
+
+      {isEmpty ? (
+        <EmptyLibrary />
+      ) : visible.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+          Aucun film ne correspond aux filtres.
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {visible.map((film) => (
+            <li key={film.id}>
+              <FilmCard film={film} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function sortFilms(films: GroupFilmCard[], sort: SortKey): GroupFilmCard[] {
+  const copy = [...films];
+  if (sort === "default") {
+    copy.sort((a, b) => {
+      if (a.isConsensus !== b.isConsensus) return a.isConsensus ? -1 : 1;
+      return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
+    });
+    return copy;
+  }
+  copy.sort((a, b) => {
+    switch (sort) {
+      case "release-desc":
+        return (
+          timestamp(b.releaseDate, -Infinity) -
+          timestamp(a.releaseDate, -Infinity)
+        );
+      case "release-asc":
+        return (
+          timestamp(a.releaseDate, Infinity) -
+          timestamp(b.releaseDate, Infinity)
+        );
+      case "added-desc":
+        return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
+      case "added-asc":
+        return new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime();
+      default:
+        return 0;
+    }
+  });
+  return copy;
+}
+
+function timestamp(date: string | null, fallback: number): number {
+  if (!date) return fallback;
+  const t = new Date(date).getTime();
+  return Number.isNaN(t) ? fallback : t;
+}
+
+function countActiveFilters(f: Filters): number {
+  let n = 0;
+  if (f.seen !== DEFAULT_FILTERS.seen) n++;
+  if (f.positioning.kind !== "any") n++;
+  if (f.genreId !== null) n++;
+  if (f.urgencyOnly) n++;
+  return n;
+}
+
+function FiltersBar({
+  filters,
+  onChange,
+  members,
+  genres,
+  activeCount,
+  drawerOpen,
+  setDrawerOpen,
+}: {
+  filters: Filters;
+  onChange: (f: Filters) => void;
+  members: GroupFilmMember[];
+  genres: { id: number; name: string }[];
+  activeCount: number;
+  drawerOpen: boolean;
+  setDrawerOpen: (v: boolean) => void;
+}) {
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2 sm:hidden">
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1.5 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+        >
+          Filtres
+          {activeCount > 0 && (
+            <span className="rounded-full bg-zinc-900 px-1.5 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
+              {activeCount}
+            </span>
+          )}
+        </button>
+        <SortSelect
+          value={filters.sort}
+          onChange={(sort) => onChange({ ...filters, sort })}
+        />
+      </div>
+
+      <div className="hidden flex-wrap items-center gap-2 sm:flex">
+        <FilterControls
+          filters={filters}
+          onChange={onChange}
+          members={members}
+          genres={genres}
+        />
+      </div>
+
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-40 sm:hidden"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 dark:bg-zinc-950">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Filtres</h2>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                className="rounded-full border border-zinc-200 px-3 py-1 text-sm dark:border-zinc-800"
+              >
+                Fermer
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <FilterControls
+                filters={filters}
+                onChange={onChange}
+                members={members}
+                genres={genres}
+              />
+              <button
+                type="button"
+                onClick={() => onChange(DEFAULT_FILTERS)}
+                className="mt-2 text-sm text-zinc-500 underline dark:text-zinc-400"
+              >
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function FilterControls({
+  filters,
+  onChange,
+  members,
+  genres,
+}: {
+  filters: Filters;
+  onChange: (f: Filters) => void;
+  members: GroupFilmMember[];
+  genres: { id: number; name: string }[];
+}) {
+  const positioningValue =
+    filters.positioning.kind === "any"
+      ? "any"
+      : filters.positioning.kind === "me"
+        ? "me"
+        : `member:${filters.positioning.memberId}`;
+
+  return (
+    <>
+      <LabeledSelect
+        label="Statut"
+        value={filters.seen}
+        onChange={(v) => onChange({ ...filters, seen: v as SeenFilter })}
+        options={[
+          { value: "unseen", label: "Non vus" },
+          { value: "seen", label: "Vus" },
+          { value: "all", label: "Tous" },
+        ]}
+      />
+      <LabeledSelect
+        label="Positionnement"
+        value={positioningValue}
+        onChange={(v) => {
+          if (v === "any") onChange({ ...filters, positioning: { kind: "any" } });
+          else if (v === "me") onChange({ ...filters, positioning: { kind: "me" } });
+          else {
+            const memberId = v.slice("member:".length);
+            onChange({
+              ...filters,
+              positioning: { kind: "member", memberId },
+            });
+          }
+        }}
+        options={[
+          { value: "any", label: "Tous" },
+          { value: "me", label: "Où je suis tagué" },
+          ...members.map((m) => ({
+            value: `member:${m.id}`,
+            label: `Où ${m.name} est tagué`,
+          })),
+        ]}
+      />
+      <LabeledSelect
+        label="Genre"
+        value={filters.genreId === null ? "all" : String(filters.genreId)}
+        onChange={(v) =>
+          onChange({
+            ...filters,
+            genreId: v === "all" ? null : Number(v),
+          })
+        }
+        options={[
+          { value: "all", label: "Tous" },
+          ...genres.map((g) => ({ value: String(g.id), label: g.name })),
+        ]}
+      />
+      <label className="flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1.5 text-sm dark:border-zinc-800">
+        <input
+          type="checkbox"
+          checked={filters.urgencyOnly}
+          onChange={(e) =>
+            onChange({ ...filters, urgencyOnly: e.target.checked })
+          }
+        />
+        Avec alerte
+      </label>
+      <div className="sm:ml-auto">
+        <SortSelect
+          value={filters.sort}
+          onChange={(sort) => onChange({ ...filters, sort })}
+        />
+      </div>
+    </>
+  );
+}
+
+function SortSelect({
+  value,
+  onChange,
+}: {
+  value: SortKey;
+  onChange: (v: SortKey) => void;
+}) {
+  return (
+    <LabeledSelect
+      label="Tri"
+      value={value}
+      onChange={(v) => onChange(v as SortKey)}
+      options={[
+        { value: "default", label: "Par défaut" },
+        { value: "release-desc", label: "Sortie (récent)" },
+        { value: "release-asc", label: "Sortie (ancien)" },
+        { value: "added-desc", label: "Ajout (récent)" },
+        { value: "added-asc", label: "Ajout (ancien)" },
+      ]}
+    />
+  );
+}
+
+function LabeledSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <label className="flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1 text-sm dark:border-zinc-800">
+      <span className="text-zinc-500 dark:text-zinc-400">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-transparent focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ActiveFilterChips({
+  filters,
+  members,
+  genres,
+  onChange,
+}: {
+  filters: Filters;
+  members: GroupFilmMember[];
+  genres: { id: number; name: string }[];
+  onChange: (f: Filters) => void;
+}) {
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (filters.seen !== DEFAULT_FILTERS.seen) {
+    chips.push({
+      key: "seen",
+      label:
+        filters.seen === "seen"
+          ? "Vus"
+          : filters.seen === "all"
+            ? "Tous statuts"
+            : "Non vus",
+      onRemove: () => onChange({ ...filters, seen: DEFAULT_FILTERS.seen }),
+    });
+  }
+
+  if (filters.positioning.kind === "me") {
+    chips.push({
+      key: "pos-me",
+      label: "Où je suis tagué",
+      onRemove: () => onChange({ ...filters, positioning: { kind: "any" } }),
+    });
+  } else if (filters.positioning.kind === "member") {
+    const memberId = filters.positioning.memberId;
+    const m = members.find((x) => x.id === memberId);
+    chips.push({
+      key: `pos-${memberId}`,
+      label: `Où ${m?.name ?? "membre"} est tagué`,
+      onRemove: () => onChange({ ...filters, positioning: { kind: "any" } }),
+    });
+  }
+
+  if (filters.genreId !== null) {
+    const g = genres.find((x) => x.id === filters.genreId);
+    chips.push({
+      key: `genre-${filters.genreId}`,
+      label: g?.name ?? "Genre",
+      onRemove: () => onChange({ ...filters, genreId: null }),
+    });
+  }
+
+  if (filters.urgencyOnly) {
+    chips.push({
+      key: "urgency",
+      label: "Avec alerte",
+      onRemove: () => onChange({ ...filters, urgencyOnly: false }),
+    });
+  }
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          onClick={c.onRemove}
+          className="flex items-center gap-1 rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          {c.label}
+          <span aria-hidden>×</span>
+        </button>
       ))}
-    </ul>
+      <button
+        type="button"
+        onClick={() => onChange(DEFAULT_FILTERS)}
+        className="text-xs text-zinc-500 underline dark:text-zinc-400"
+      >
+        Tout effacer
+      </button>
+    </div>
+  );
+}
+
+function EmptyLibrary() {
+  const queryClient = useQueryClient();
+  const seed = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/dev/seed-films", { method: "POST" });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(payload.error ?? "Erreur lors du seed");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["group-films"] });
+    },
+  });
+
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+      <p>Aucun film dans votre groupe pour le moment.</p>
+      <button
+        type="button"
+        onClick={() => seed.mutate()}
+        disabled={seed.isPending}
+        className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-500 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+      >
+        {seed.isPending ? "Ajout…" : "Ajouter 2 films aléatoires (test)"}
+      </button>
+      {seed.isError && (
+        <p className="text-xs text-red-600 dark:text-red-400">
+          {seed.error instanceof Error ? seed.error.message : "Erreur"}
+        </p>
+      )}
+    </div>
   );
 }
 

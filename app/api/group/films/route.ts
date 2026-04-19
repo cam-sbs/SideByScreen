@@ -7,6 +7,11 @@ export type GroupFilmMember = {
   avatarUrl: string | null;
 };
 
+export type GroupFilmGenre = {
+  id: number;
+  name: string;
+};
+
 export type GroupFilmCard = {
   id: string;
   tmdbId: number;
@@ -15,9 +20,12 @@ export type GroupFilmCard = {
   addedAt: string;
   addedBy: GroupFilmMember | null;
   taggedMembers: GroupFilmMember[];
+  taggedByMe: boolean;
   seenByMe: boolean;
   releaseDate: string | null;
   isConsensus: boolean;
+  hasUrgency: boolean;
+  genres: GroupFilmGenre[];
 };
 
 function urgencyRank(releaseDate: string | null): 0 | 1 | 2 {
@@ -101,6 +109,7 @@ export async function GET() {
 
   const taggedByFilm = new Map<string, GroupFilmMember[]>();
   const seenByMe = new Set<string>();
+  const taggedByMe = new Set<string>();
 
   for (const tag of tags) {
     if (tag.is_tagged && tag.user) {
@@ -111,6 +120,9 @@ export async function GET() {
         avatarUrl: tag.user.avatar_url,
       });
       taggedByFilm.set(tag.group_film_id, list);
+      if (tag.user_id === user.id) {
+        taggedByMe.add(tag.group_film_id);
+      }
     }
     if (tag.is_seen && tag.user_id === user.id) {
       seenByMe.add(tag.group_film_id);
@@ -122,11 +134,13 @@ export async function GET() {
       let title = `Film #${film.tmdb_id}`;
       let posterPath: string | null = null;
       let releaseDate: string | null = null;
+      let genres: GroupFilmGenre[] = [];
       try {
         const details = await getMovieDetails(film.tmdb_id);
         title = details.title;
         posterPath = details.poster_path;
         releaseDate = details.release_date || null;
+        genres = (details.genres ?? []).map((g) => ({ id: g.id, name: g.name }));
       } catch {
         // keep fallback
       }
@@ -146,10 +160,13 @@ export async function GET() {
             }
           : null,
         taggedMembers,
+        taggedByMe: taggedByMe.has(film.id),
         seenByMe: seenByMe.has(film.id),
         releaseDate,
         isConsensus:
           totalMembers > 0 && taggedMembers.length >= totalMembers,
+        hasUrgency: urgencyRank(releaseDate) > 0,
+        genres,
       };
     }),
   );

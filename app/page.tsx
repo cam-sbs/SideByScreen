@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FilmsGrid } from "./FilmsGrid";
+import { TmdbSearchBar } from "./TmdbSearchBar";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,8 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col px-4 py-6 sm:px-6 lg:px-10">
-      <div className="mx-auto w-full max-w-6xl space-y-6">
+      <TmdbSearchBar />
+      <div className="mx-auto w-full max-w-6xl space-y-6 pt-4">
         <header className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Films du groupe</h1>

@@ -185,3 +185,47 @@ export async function GET() {
 
   return Response.json({ films: cards });
 }
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return Response.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return Response.json({ error: "Requête invalide" }, { status: 400 });
+  }
+
+  const tmdbId = (payload as { tmdbId?: unknown } | null)?.tmdbId;
+  if (typeof tmdbId !== "number" || !Number.isInteger(tmdbId) || tmdbId <= 0) {
+    return Response.json({ error: "tmdbId invalide" }, { status: 400 });
+  }
+
+  const { data, error } = await supabase
+    .rpc("add_group_film", { p_tmdb_id: tmdbId })
+    .single<{ film_id: string; already_exists: boolean }>();
+
+  if (error) {
+    if (error.code === "P0001") {
+      return Response.json({ error: "Aucun groupe" }, { status: 404 });
+    }
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+
+  if (data.already_exists) {
+    return Response.json(
+      { error: "Ce film est déjà dans la liste", id: data.film_id },
+      { status: 409 },
+    );
+  }
+
+  return Response.json({ id: data.film_id }, { status: 201 });
+}

@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import type { TMDBSearchResult } from "@/lib/tmdb";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { TMDBMovie, TMDBSearchResult } from "@/lib/tmdb";
 
 async function searchTmdb(query: string): Promise<TMDBSearchResult> {
   const res = await fetch(
@@ -16,12 +15,33 @@ async function searchTmdb(query: string): Promise<TMDBSearchResult> {
   return (await res.json()) as TMDBSearchResult;
 }
 
+type AddFilmResponse = { id?: string; error?: string };
+
+async function addFilm(tmdbId: number): Promise<{ status: number; body: AddFilmResponse }> {
+  const res = await fetch("/api/group/films", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tmdbId }),
+  });
+  const body = (await res.json().catch(() => ({}))) as AddFilmResponse;
+  return { status: res.status, body };
+}
+
+type Toast = { kind: "success" | "error" | "info"; message: string };
+
 export function TmdbSearchBar() {
   const [input, setInput] = useState("");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
+  const [toast, setToast] = useState<Toast | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(input.trim()), 300);
@@ -46,13 +66,35 @@ export function TmdbSearchBar() {
     staleTime: 60_000,
   });
 
+  const queryClient = useQueryClient();
+  const addMutation = useMutation({
+    mutationFn: (movie: TMDBMovie) => addFilm(movie.id),
+    onSuccess: ({ status, body }, movie) => {
+      if (status === 201) {
+        setToast({ kind: "success", message: `« ${movie.title} » ajouté` });
+        queryClient.invalidateQueries({ queryKey: ["group-films"] });
+      } else if (status === 409) {
+        setToast({ kind: "info", message: "Ce film est déjà dans la liste" });
+      } else {
+        setToast({
+          kind: "error",
+          message: body.error ?? "Erreur lors de l'ajout",
+        });
+      }
+    },
+    onError: () => {
+      setToast({ kind: "error", message: "Erreur lors de l'ajout" });
+    },
+  });
+
   const results = data?.results.slice(0, 8) ?? [];
   const showDropdown = open && (enabled || input.length > 0);
+  const pendingId = addMutation.isPending ? addMutation.variables?.id : null;
 
   return (
     <div
       ref={containerRef}
-      className="sticky top-0 z-30 -mx-4 bg-white/85 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 dark:bg-zinc-950/85"
+      className="sticky top-0 z-50 -mx-4 bg-white/85 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 dark:bg-zinc-950/85"
     >
       <div className="relative mx-auto w-full max-w-6xl">
         <label htmlFor="tmdb-search-input" className="sr-only">
@@ -100,53 +142,76 @@ export function TmdbSearchBar() {
               </p>
             ) : (
               <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {results.map((movie) => (
-                  <li key={movie.id} role="option" aria-selected="false">
-                    <Link
-                      href={`/film/${movie.id}`}
-                      onClick={() => setOpen(false)}
-                      className="flex gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                    >
-                      <div className="relative h-[90px] w-[60px] flex-shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
-                        {movie.poster_path ? (
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                            alt=""
-                            fill
-                            sizes="60px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
-                            —
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col gap-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <h3 className="truncate text-sm font-semibold">
-                            {movie.title}
-                          </h3>
-                          {movie.release_date && (
-                            <span className="flex-shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
-                              {movie.release_date.slice(0, 4)}
+                {results.map((movie) => {
+                  const isPending = pendingId === movie.id;
+                  return (
+                    <li key={movie.id} role="option" aria-selected="false">
+                      <div className="flex items-center gap-3 p-3">
+                        <div className="relative h-[90px] w-[60px] flex-shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
+                          {movie.poster_path ? (
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                              alt=""
+                              fill
+                              sizes="60px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
+                              —
                             </span>
                           )}
                         </div>
-                        {movie.overview && (
-                          <p className="line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">
-                            {movie.overview}
-                          </p>
-                        )}
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="truncate text-sm font-semibold">
+                              {movie.title}
+                            </h3>
+                            {movie.release_date && (
+                              <span className="flex-shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                                {movie.release_date.slice(0, 4)}
+                              </span>
+                            )}
+                          </div>
+                          {movie.overview && (
+                            <p className="line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">
+                              {movie.overview}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addMutation.mutate(movie)}
+                          disabled={isPending || addMutation.isPending}
+                          className="flex-shrink-0 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                        >
+                          {isPending ? "Ajout…" : "Ajouter"}
+                        </button>
                       </div>
-                    </Link>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
         )}
       </div>
+
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto w-fit max-w-[90%] rounded-full px-4 py-2 text-sm font-medium shadow-lg ${
+            toast.kind === "success"
+              ? "bg-emerald-600 text-white"
+              : toast.kind === "error"
+                ? "bg-red-600 text-white"
+                : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

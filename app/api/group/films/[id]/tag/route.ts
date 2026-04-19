@@ -86,5 +86,24 @@ export async function PATCH(
     return Response.json({ error: error.message }, { status: 500 });
   }
 
+  const becameSeen =
+    updates.is_seen === true && existing?.is_seen !== true;
+  if (becameSeen) {
+    const { error: notifyError } = await supabase.rpc("notify_film_seen", {
+      p_group_film_id: groupFilmId,
+    });
+    if (notifyError) {
+      console.error("[tag] notify_film_seen failed", notifyError);
+    }
+  }
+
+  const { error: recalcError } = await supabase.rpc(
+    "recalculate_group_film_visibility",
+    { p_group_film_id: groupFilmId },
+  );
+  if (recalcError) {
+    console.error("[tag] recalculate_group_film_visibility failed", recalcError);
+  }
+
   return Response.json({ ok: true });
 }

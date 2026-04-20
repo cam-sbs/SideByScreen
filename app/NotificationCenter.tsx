@@ -252,6 +252,8 @@ function formatMessage(n: NotificationItem): string {
       return `${who} a ajouté le film ${title}`;
     case "film_tagged":
       return `${who} s'est positionné sur ${title}`;
+    case "film_untagged":
+      return `${who} a retiré son positionnement sur ${title}`;
     case "film_seen":
       return `${who} a vu ${title}`;
     default:

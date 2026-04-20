@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMovieDetails } from "@/lib/tmdb";
 
-export type NotificationType = "film_added" | "film_tagged" | "film_seen";
+export type NotificationType =
+  | "film_added"
+  | "film_tagged"
+  | "film_untagged"
+  | "film_seen";
 
 export type NotificationItem = {
   id: string;

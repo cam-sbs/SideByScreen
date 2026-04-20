@@ -6,7 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type NotificationType = "film_added" | "film_tagged" | "film_seen";
+export type NotificationType =
+  | "film_added"
+  | "film_tagged"
+  | "film_untagged"
+  | "film_seen";
 
 export interface Database {
   public: {

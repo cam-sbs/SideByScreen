@@ -97,6 +97,17 @@ export async function PATCH(
     }
   }
 
+  const becameTagged =
+    updates.is_tagged === true && existing?.is_tagged !== true;
+  if (becameTagged) {
+    const { error: notifyError } = await supabase.rpc("notify_film_tagged", {
+      p_group_film_id: groupFilmId,
+    });
+    if (notifyError) {
+      console.error("[tag] notify_film_tagged failed", notifyError);
+    }
+  }
+
   const { error: recalcError } = await supabase.rpc(
     "recalculate_group_film_visibility",
     { p_group_film_id: groupFilmId },

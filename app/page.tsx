@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FilmsGrid } from "./FilmsGrid";
+import { NotificationCenter } from "./NotificationCenter";
 import { TmdbSearchBar } from "./TmdbSearchBar";
 
 export const dynamic = "force-dynamic";
@@ -38,12 +39,15 @@ export default async function Home() {
               Les films proposés à voir ensemble.
             </p>
           </div>
-          <Link
-            href="/profile"
-            className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
-          >
-            Profil
-          </Link>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <Link
+              href="/profile"
+              className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+            >
+              Profil
+            </Link>
+          </div>
         </header>
 
         <FilmsGrid />

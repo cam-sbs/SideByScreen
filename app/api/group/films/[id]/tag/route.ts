@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 type Body = {
   is_tagged?: boolean;
   is_seen?: boolean;
+  is_wished?: boolean;
 };
 
 export async function PATCH(
@@ -32,6 +33,7 @@ export async function PATCH(
   const updates: {
     is_tagged?: boolean;
     is_seen?: boolean;
+    is_wished?: boolean;
     seen_at?: string | null;
   } = {};
 
@@ -41,6 +43,9 @@ export async function PATCH(
   if (typeof body.is_seen === "boolean") {
     updates.is_seen = body.is_seen;
     updates.seen_at = body.is_seen ? new Date().toISOString() : null;
+  }
+  if (typeof body.is_wished === "boolean") {
+    updates.is_wished = body.is_wished;
   }
 
   if (Object.keys(updates).length === 0) {
@@ -59,13 +64,14 @@ export async function PATCH(
 
   const { data: existing } = await supabase
     .from("user_film_tags")
-    .select("is_tagged, is_seen, seen_at")
+    .select("is_tagged, is_seen, is_wished, seen_at")
     .eq("user_id", user.id)
     .eq("group_film_id", groupFilmId)
     .maybeSingle();
 
   const nextIsTagged = updates.is_tagged ?? existing?.is_tagged ?? false;
   const nextIsSeen = updates.is_seen ?? existing?.is_seen ?? false;
+  const nextIsWished = updates.is_wished ?? existing?.is_wished ?? false;
   const nextSeenAt =
     updates.is_seen === undefined
       ? (existing?.seen_at ?? null)
@@ -77,6 +83,7 @@ export async function PATCH(
       group_film_id: groupFilmId,
       is_tagged: nextIsTagged,
       is_seen: nextIsSeen,
+      is_wished: nextIsWished,
       seen_at: nextSeenAt,
     },
     { onConflict: "user_id,group_film_id", ignoreDuplicates: false },

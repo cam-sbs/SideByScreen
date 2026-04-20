@@ -17,11 +17,16 @@ export type FilmSocialData = {
   taggedMembers: FilmSocialMember[];
   taggedByMe: boolean;
   seenByMe: boolean;
+  wishedByMe: boolean;
   totalMembers: number;
   urgency: { level: "orange" | "red"; label: string } | null;
 };
 
-type PatchBody = { is_tagged?: boolean; is_seen?: boolean };
+type PatchBody = {
+  is_tagged?: boolean;
+  is_seen?: boolean;
+  is_wished?: boolean;
+};
 
 async function patchTag(
   groupFilmId: string,
@@ -44,7 +49,9 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [confirmUntag, setConfirmUntag] = useState(false);
-  const [pendingKind, setPendingKind] = useState<"tag" | "seen" | null>(null);
+  const [pendingKind, setPendingKind] = useState<
+    "tag" | "seen" | "wish" | null
+  >(null);
 
   const mutation = useMutation({
     mutationFn: (body: PatchBody) => patchTag(data.groupFilmId, body),
@@ -77,6 +84,11 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
   const handleSeenClick = () => {
     setPendingKind("seen");
     mutation.mutate({ is_seen: !data.seenByMe });
+  };
+
+  const handleWishClick = () => {
+    setPendingKind("wish");
+    mutation.mutate({ is_wished: !data.wishedByMe });
   };
 
   const confirmRemoveTag = () => {
@@ -158,6 +170,20 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
           }`}
         >
           {data.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
+        </button>
+        <button
+          type="button"
+          onClick={handleWishClick}
+          disabled={mutation.isPending && pendingKind === "wish"}
+          aria-pressed={data.wishedByMe}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+            data.wishedByMe
+              ? "border border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+              : "border border-zinc-300 bg-white text-zinc-800 hover:border-rose-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+          }`}
+        >
+          <span aria-hidden>{data.wishedByMe ? "♥" : "♡"}</span>
+          {data.wishedByMe ? "Dans mes souhaits" : "Ajouter aux souhaits"}
         </button>
       </div>
 

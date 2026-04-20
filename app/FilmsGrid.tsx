@@ -600,6 +600,15 @@ function FilmCard({ film }: { film: GroupFilmCard }) {
             Vu
           </span>
         )}
+        {film.wishedByMe && !film.seenByMe && (
+          <span
+            title="Dans mes souhaits"
+            aria-label="Dans mes souhaits"
+            className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-xs font-semibold text-white shadow ring-2 ring-white dark:ring-zinc-950"
+          >
+            ♥
+          </span>
+        )}
         <UrgencyBadge releaseDate={film.releaseDate} />
       </div>
 

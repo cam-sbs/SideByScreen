@@ -22,6 +22,7 @@ export type GroupFilmCard = {
   taggedMembers: GroupFilmMember[];
   taggedByMe: boolean;
   seenByMe: boolean;
+  wishedByMe: boolean;
   releaseDate: string | null;
   isConsensus: boolean;
   hasUrgency: boolean;
@@ -95,7 +96,7 @@ export async function GET() {
   const { data: tagsData } = await supabase
     .from("user_film_tags")
     .select(
-      "group_film_id, user_id, is_seen, is_tagged, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
+      "group_film_id, user_id, is_seen, is_tagged, is_wished, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
     )
     .in("group_film_id", filmIds);
 
@@ -104,12 +105,14 @@ export async function GET() {
     user_id: string;
     is_seen: boolean;
     is_tagged: boolean;
+    is_wished: boolean;
     user: { id: string; name: string; avatar_url: string | null } | null;
   }[];
 
   const taggedByFilm = new Map<string, GroupFilmMember[]>();
   const seenByMe = new Set<string>();
   const taggedByMe = new Set<string>();
+  const wishedByMe = new Set<string>();
 
   for (const tag of tags) {
     if (tag.is_tagged && tag.user) {
@@ -126,6 +129,9 @@ export async function GET() {
     }
     if (tag.is_seen && tag.user_id === user.id) {
       seenByMe.add(tag.group_film_id);
+    }
+    if (tag.is_wished && tag.user_id === user.id) {
+      wishedByMe.add(tag.group_film_id);
     }
   }
 
@@ -162,6 +168,7 @@ export async function GET() {
         taggedMembers,
         taggedByMe: taggedByMe.has(film.id),
         seenByMe: seenByMe.has(film.id),
+        wishedByMe: wishedByMe.has(film.id),
         releaseDate,
         isConsensus:
           totalMembers > 0 && taggedMembers.length >= totalMembers,

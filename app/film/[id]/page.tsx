@@ -253,7 +253,7 @@ async function fetchFilmSocial(
   const { data: tagsData } = await supabase
     .from("user_film_tags")
     .select(
-      "user_id, is_seen, is_tagged, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
+      "user_id, is_seen, is_tagged, is_wished, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
     )
     .eq("group_film_id", film.id);
 
@@ -261,6 +261,7 @@ async function fetchFilmSocial(
     user_id: string;
     is_seen: boolean;
     is_tagged: boolean;
+    is_wished: boolean;
     user: { id: string; name: string; avatar_url: string | null } | null;
   }[];
 
@@ -275,6 +276,9 @@ async function fetchFilmSocial(
     (t) => t.user_id === user.id && t.is_tagged,
   );
   const seenByMe = tags.some((t) => t.user_id === user.id && t.is_seen);
+  const wishedByMe = tags.some(
+    (t) => t.user_id === user.id && t.is_wished,
+  );
 
   return {
     groupFilmId: film.id,
@@ -289,6 +293,7 @@ async function fetchFilmSocial(
     taggedMembers,
     taggedByMe,
     seenByMe,
+    wishedByMe,
     totalMembers: memberCount ?? 0,
     urgency: computeUrgency(releaseDate),
   };

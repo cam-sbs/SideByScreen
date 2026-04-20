@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { logout } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
+import { ResetPasswordButton } from "./ResetPasswordButton";
 
 type Props = {
   searchParams: Promise<{ next?: string }>;
@@ -92,6 +94,15 @@ export default async function ProfilePage({ searchParams }: Props) {
               →
             </span>
           </Link>
+          {user.email && <ResetPasswordButton email={user.email} />}
+          <form action={logout}>
+            <button
+              type="submit"
+              className="w-full rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              Se déconnecter
+            </button>
+          </form>
         </div>
       </div>
     </div>

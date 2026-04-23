@@ -23,6 +23,7 @@ export type GroupFilmCard = {
   taggedByMe: boolean;
   seenByMe: boolean;
   wishedByMe: boolean;
+  plannedByMe: boolean;
   releaseDate: string | null;
   isConsensus: boolean;
   hasUrgency: boolean;
@@ -100,6 +101,26 @@ export async function GET() {
     )
     .in("group_film_id", filmIds);
 
+  const nowIso = new Date().toISOString();
+  const { data: plannedData } = await supabase
+    .from("screening_participants")
+    .select(
+      "status, screening:film_screenings!screening_participants_screening_id_fkey(group_film_id, scheduled_at)",
+    )
+    .eq("user_id", user.id)
+    .in("status", ["pending", "accepted"]);
+
+  const plannedByMe = new Set<string>();
+  for (const row of (plannedData ?? []) as unknown as {
+    status: string;
+    screening: { group_film_id: string; scheduled_at: string } | null;
+  }[]) {
+    if (!row.screening) continue;
+    if (row.screening.scheduled_at >= nowIso) {
+      plannedByMe.add(row.screening.group_film_id);
+    }
+  }
+
   const tags = (tagsData ?? []) as unknown as {
     group_film_id: string;
     user_id: string;
@@ -169,6 +190,7 @@ export async function GET() {
         taggedByMe: taggedByMe.has(film.id),
         seenByMe: seenByMe.has(film.id),
         wishedByMe: wishedByMe.has(film.id),
+        plannedByMe: plannedByMe.has(film.id),
         releaseDate,
         isConsensus:
           totalMembers > 0 && taggedMembers.length >= totalMembers,

@@ -19,6 +19,7 @@ async function fetchFilms(): Promise<GroupFilmCard[]> {
 }
 
 type SeenFilter = "unseen" | "seen" | "all";
+type PlannedFilter = "any" | "planned" | "not-planned";
 type PositioningFilter =
   | { kind: "any" }
   | { kind: "me" }
@@ -35,6 +36,7 @@ type Filters = {
   positioning: PositioningFilter;
   genreId: number | null;
   urgencyOnly: boolean;
+  planned: PlannedFilter;
   sort: SortKey;
 };
 
@@ -43,6 +45,7 @@ const DEFAULT_FILTERS: Filters = {
   positioning: { kind: "any" },
   genreId: null,
   urgencyOnly: false,
+  planned: "any",
   sort: "default",
 };
 
@@ -93,6 +96,9 @@ export function FilmsGrid() {
       }
 
       if (filters.urgencyOnly && !film.hasUrgency) return false;
+
+      if (filters.planned === "planned" && !film.plannedByMe) return false;
+      if (filters.planned === "not-planned" && film.plannedByMe) return false;
 
       return true;
     });
@@ -211,6 +217,7 @@ function countActiveFilters(f: Filters): number {
   if (f.positioning.kind !== "any") n++;
   if (f.genreId !== null) n++;
   if (f.urgencyOnly) n++;
+  if (f.planned !== DEFAULT_FILTERS.planned) n++;
   return n;
 }
 
@@ -381,6 +388,18 @@ function FilterControls({
         />
         Avec alerte
       </label>
+      <LabeledSelect
+        label="Planifié"
+        value={filters.planned}
+        onChange={(v) =>
+          onChange({ ...filters, planned: v as PlannedFilter })
+        }
+        options={[
+          { value: "any", label: "Tous" },
+          { value: "planned", label: "Planifiés" },
+          { value: "not-planned", label: "Non planifiés" },
+        ]}
+      />
       <div className="sm:ml-auto">
         <SortSelect
           value={filters.sort}
@@ -502,6 +521,14 @@ function ActiveFilterChips({
     });
   }
 
+  if (filters.planned !== DEFAULT_FILTERS.planned) {
+    chips.push({
+      key: "planned",
+      label: filters.planned === "planned" ? "Planifiés" : "Non planifiés",
+      onRemove: () => onChange({ ...filters, planned: "any" }),
+    });
+  }
+
   if (chips.length === 0) return null;
 
   return (
@@ -598,6 +625,15 @@ function FilmCard({ film }: { film: GroupFilmCard }) {
         {film.seenByMe && (
           <span className="absolute right-2 top-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
             Vu
+          </span>
+        )}
+        {film.plannedByMe && !film.seenByMe && (
+          <span
+            title="Séance planifiée"
+            aria-label="Séance planifiée"
+            className="absolute left-2 bottom-2 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow"
+          >
+            📅 Planifié
           </span>
         )}
         {film.wishedByMe && !film.seenByMe && (

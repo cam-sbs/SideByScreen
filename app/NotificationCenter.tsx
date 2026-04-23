@@ -256,6 +256,10 @@ function formatMessage(n: NotificationItem): string {
       return `${who} a retiré son positionnement sur ${title}`;
     case "film_seen":
       return `${who} a vu ${title}`;
+    case "screening_invited":
+      return `${who} vous invite à une séance pour ${title}`;
+    case "screening_cancelled":
+      return `${who} ne viendra plus à la séance pour ${title}`;
     default:
       return `${who} – ${title}`;
   }

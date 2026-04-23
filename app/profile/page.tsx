@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/server";
+import { AgendaSection } from "./AgendaSection";
 import { ProfileForm } from "./ProfileForm";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 
@@ -67,6 +68,8 @@ export default async function ProfilePage({ searchParams }: Props) {
           initialAvatarUrl={profile?.avatar_url ?? null}
           redirectTo={isFirstTime ? (next ?? "/onboarding") : null}
         />
+
+        {!isFirstTime && <AgendaSection />}
 
         <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           {groupName && (

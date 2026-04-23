@@ -10,7 +10,14 @@ export type NotificationType =
   | "film_added"
   | "film_tagged"
   | "film_untagged"
-  | "film_seen";
+  | "film_seen"
+  | "screening_invited"
+  | "screening_cancelled";
+
+export type ScreeningParticipantStatus =
+  | "pending"
+  | "accepted"
+  | "cancelled";
 
 export interface Database {
   public: {
@@ -107,12 +114,56 @@ export interface Database {
           seen_at?: string | null;
         };
       };
+      film_screenings: {
+        Row: {
+          id: string;
+          group_film_id: string;
+          scheduled_by_user_id: string;
+          scheduled_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_film_id: string;
+          scheduled_by_user_id: string;
+          scheduled_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_film_id?: string;
+          scheduled_by_user_id?: string;
+          scheduled_at?: string;
+          created_at?: string;
+        };
+      };
+      screening_participants: {
+        Row: {
+          screening_id: string;
+          user_id: string;
+          status: ScreeningParticipantStatus;
+          responded_at: string | null;
+        };
+        Insert: {
+          screening_id: string;
+          user_id: string;
+          status?: ScreeningParticipantStatus;
+          responded_at?: string | null;
+        };
+        Update: {
+          screening_id?: string;
+          user_id?: string;
+          status?: ScreeningParticipantStatus;
+          responded_at?: string | null;
+        };
+      };
       notifications: {
         Row: {
           id: string;
           user_id: string;
           type: NotificationType;
           group_film_id: string | null;
+          screening_id: string | null;
           triggered_by_user_id: string | null;
           read_at: string | null;
           created_at: string;
@@ -122,6 +173,7 @@ export interface Database {
           user_id: string;
           type: NotificationType;
           group_film_id?: string | null;
+          screening_id?: string | null;
           triggered_by_user_id?: string | null;
           read_at?: string | null;
           created_at?: string;
@@ -131,6 +183,7 @@ export interface Database {
           user_id?: string;
           type?: NotificationType;
           group_film_id?: string | null;
+          screening_id?: string | null;
           triggered_by_user_id?: string | null;
           read_at?: string | null;
           created_at?: string;
@@ -151,9 +204,22 @@ export interface Database {
         Args: { code: string };
         Returns: { id: string; name: string }[];
       };
+      create_film_screening: {
+        Args: {
+          p_group_film_id: string;
+          p_scheduled_at: string;
+          p_participant_ids: string[];
+        };
+        Returns: string;
+      };
+      respond_to_screening: {
+        Args: { p_screening_id: string; p_accept: boolean };
+        Returns: void;
+      };
     };
     Enums: {
       notification_type: NotificationType;
+      screening_participant_status: ScreeningParticipantStatus;
     };
   };
 }

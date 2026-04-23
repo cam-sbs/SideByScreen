@@ -5,7 +5,9 @@ export type NotificationType =
   | "film_added"
   | "film_tagged"
   | "film_untagged"
-  | "film_seen";
+  | "film_seen"
+  | "screening_invited"
+  | "screening_cancelled";
 
 export type NotificationItem = {
   id: string;

@@ -16,6 +16,11 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const callbackError = searchParams.get("error");
+  const nextParam = searchParams.get("next");
+  const next =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : null;
 
   const [error, setError] = useState<string | null>(
     callbackError === "callback"
@@ -78,6 +83,7 @@ function LoginForm() {
         )}
 
         <form action={handleSubmit} className="space-y-4">
+          {next && <input type="hidden" name="next" value={next} />}
           <div>
             <label
               htmlFor="email"
@@ -96,12 +102,17 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium mb-1.5"
-            >
-              Mot de passe
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium">
+                Mot de passe
+              </label>
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
             <input
               id="password"
               name="password"
@@ -174,7 +185,7 @@ function LoginForm() {
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
           Pas encore de compte ?{" "}
           <Link
-            href="/auth/signup"
+            href={next ? `/auth/signup?next=${encodeURIComponent(next)}` : "/auth/signup"}
             className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
           >
             Créer un compte

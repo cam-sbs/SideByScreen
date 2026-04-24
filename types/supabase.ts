@@ -6,18 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type NotificationType =
-  | "film_added"
-  | "film_tagged"
-  | "film_untagged"
-  | "film_seen"
-  | "screening_invited"
-  | "screening_cancelled";
-
-export type ScreeningParticipantStatus =
-  | "pending"
-  | "accepted"
-  | "cancelled";
+export type NotificationType = "film_added" | "film_tagged" | "film_seen";
 
 export interface Database {
   public: {
@@ -26,19 +15,16 @@ export interface Database {
         Row: {
           id: string;
           name: string;
-          invite_code: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
-          invite_code?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
-          invite_code?: string;
           created_at?: string;
         };
       };
@@ -114,56 +100,12 @@ export interface Database {
           seen_at?: string | null;
         };
       };
-      film_screenings: {
-        Row: {
-          id: string;
-          group_film_id: string;
-          scheduled_by_user_id: string;
-          scheduled_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          group_film_id: string;
-          scheduled_by_user_id: string;
-          scheduled_at: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          group_film_id?: string;
-          scheduled_by_user_id?: string;
-          scheduled_at?: string;
-          created_at?: string;
-        };
-      };
-      screening_participants: {
-        Row: {
-          screening_id: string;
-          user_id: string;
-          status: ScreeningParticipantStatus;
-          responded_at: string | null;
-        };
-        Insert: {
-          screening_id: string;
-          user_id: string;
-          status?: ScreeningParticipantStatus;
-          responded_at?: string | null;
-        };
-        Update: {
-          screening_id?: string;
-          user_id?: string;
-          status?: ScreeningParticipantStatus;
-          responded_at?: string | null;
-        };
-      };
       notifications: {
         Row: {
           id: string;
           user_id: string;
           type: NotificationType;
           group_film_id: string | null;
-          screening_id: string | null;
           triggered_by_user_id: string | null;
           read_at: string | null;
           created_at: string;
@@ -173,7 +115,6 @@ export interface Database {
           user_id: string;
           type: NotificationType;
           group_film_id?: string | null;
-          screening_id?: string | null;
           triggered_by_user_id?: string | null;
           read_at?: string | null;
           created_at?: string;
@@ -183,7 +124,6 @@ export interface Database {
           user_id?: string;
           type?: NotificationType;
           group_film_id?: string | null;
-          screening_id?: string | null;
           triggered_by_user_id?: string | null;
           read_at?: string | null;
           created_at?: string;
@@ -191,35 +131,9 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: {
-      create_and_join_group: {
-        Args: { group_name: string };
-        Returns: string;
-      };
-      join_group_by_code: {
-        Args: { code: string };
-        Returns: string;
-      };
-      lookup_group_by_invite_code: {
-        Args: { code: string };
-        Returns: { id: string; name: string }[];
-      };
-      create_film_screening: {
-        Args: {
-          p_group_film_id: string;
-          p_scheduled_at: string;
-          p_participant_ids: string[];
-        };
-        Returns: string;
-      };
-      respond_to_screening: {
-        Args: { p_screening_id: string; p_accept: boolean };
-        Returns: void;
-      };
-    };
+    Functions: Record<string, never>;
     Enums: {
       notification_type: NotificationType;
-      screening_participant_status: ScreeningParticipantStatus;
     };
   };
 }

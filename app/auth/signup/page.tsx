@@ -1,26 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { signup, loginWithOAuth } from "@/app/actions/auth";
 
 export default function SignupPage() {
-  return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
-  );
-}
-
-function SignupForm() {
-  const searchParams = useSearchParams();
-  const nextParam = searchParams.get("next");
-  const next =
-    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-      ? nextParam
-      : null;
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -78,7 +62,6 @@ function SignupForm() {
         )}
 
         <form action={handleSubmit} className="space-y-4">
-          {next && <input type="hidden" name="next" value={next} />}
           <div>
             <label
               htmlFor="name"
@@ -192,7 +175,7 @@ function SignupForm() {
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
           Déjà un compte ?{" "}
           <Link
-            href={next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login"}
+            href="/auth/login"
             className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
           >
             Se connecter

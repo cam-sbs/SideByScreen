@@ -4,21 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const nextParam = searchParams.get("next");
-  const next =
-    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-      ? nextParam
-      : null;
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      if (next) {
-        return NextResponse.redirect(new URL(next, origin));
-      }
-
       // Check if user has a profile with group_id
       const {
         data: { user },
@@ -32,7 +23,7 @@ export async function GET(request: Request) {
           .single();
 
         if (!profile || !profile.group_id) {
-          return NextResponse.redirect(new URL("/onboarding", origin));
+          return NextResponse.redirect(new URL("/profile", origin));
         }
       }
 

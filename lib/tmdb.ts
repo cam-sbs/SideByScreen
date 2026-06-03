@@ -121,3 +121,19 @@ export async function getMovieDetails(
 
   return tmdbFetch<TMDBMovieDetails>(`/movie/${id}`, params);
 }
+
+export interface TMDBReleaseDatesResult {
+  id: number;
+  results: {
+    iso_3166_1: string;
+    release_dates: {
+      certification: string;
+      release_date: string;
+      type: number;
+    }[];
+  }[];
+}
+
+export async function getMovieReleaseDates(id: number): Promise<TMDBReleaseDatesResult> {
+  return tmdbFetch<TMDBReleaseDatesResult>(`/movie/${id}/release_dates`);
+}

@@ -11,6 +11,7 @@ export type NotificationType =
   | "film_tagged"
   | "film_untagged"
   | "film_seen"
+  | "film_moved_to_salon"
   | "screening_invited"
   | "screening_cancelled";
 
@@ -73,6 +74,10 @@ export interface Database {
           added_by_user_id: string;
           added_at: string;
           visible: boolean;
+          screen_status: "in_theaters" | "coming_soon" | "salon" | "unknown";
+          theatrical_release_date: string | null;
+          transitioned_to_salon_at: string | null;
+          salon_override: boolean;
         };
         Insert: {
           id?: string;
@@ -81,6 +86,10 @@ export interface Database {
           added_by_user_id: string;
           added_at?: string;
           visible?: boolean;
+          screen_status?: "in_theaters" | "coming_soon" | "salon" | "unknown";
+          theatrical_release_date?: string | null;
+          transitioned_to_salon_at?: string | null;
+          salon_override?: boolean;
         };
         Update: {
           id?: string;
@@ -89,6 +98,10 @@ export interface Database {
           added_by_user_id?: string;
           added_at?: string;
           visible?: boolean;
+          screen_status?: "in_theaters" | "coming_soon" | "salon" | "unknown";
+          theatrical_release_date?: string | null;
+          transitioned_to_salon_at?: string | null;
+          salon_override?: boolean;
         };
       };
       user_film_tags: {

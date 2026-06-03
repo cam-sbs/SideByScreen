@@ -2,13 +2,15 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type FilmSocialMember = {
   id: string;
   name: string;
   avatarUrl: string | null;
 };
+
+export type ScreenStatus = "in_theaters" | "coming_soon" | "salon" | "unknown";
 
 export type FilmSocialData = {
   groupFilmId: string;
@@ -20,6 +22,8 @@ export type FilmSocialData = {
   wishedByMe: boolean;
   totalMembers: number;
   urgency: { level: "orange" | "red"; label: string } | null;
+  screenStatus: ScreenStatus;
+  theatricalReleaseDate: string | null;
 };
 
 type PatchBody = {
@@ -45,6 +49,59 @@ async function patchTag(
   }
 }
 
+function ScreenStatusBadge({
+  screenStatus,
+  theatricalReleaseDate,
+}: {
+  screenStatus: ScreenStatus;
+  theatricalReleaseDate: string | null;
+}) {
+  if (screenStatus === "in_theaters") {
+    const days = theatricalReleaseDate
+      ? Math.floor(
+          (Date.now() - new Date(theatricalReleaseDate).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : null;
+    return (
+      <div className="flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+        Actuellement en salle
+        {days !== null && (
+          <span className="text-emerald-600 dark:text-emerald-400">
+            · Sorti il y a {days} jour{days !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (screenStatus === "coming_soon" && theatricalReleaseDate) {
+    const date = new Date(theatricalReleaseDate).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return (
+      <div className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+        Sort le {date}
+      </div>
+    );
+  }
+
+  if (screenStatus === "salon") {
+    return (
+      <div className="flex items-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+        <span aria-hidden>🛋️</span>
+        Disponible à la maison
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export function FilmSocial({ data }: { data: FilmSocialData }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -52,9 +109,35 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
   const [pendingKind, setPendingKind] = useState<
     "tag" | "seen" | "wish" | null
   >(null);
+  const [optimistic, setOptimistic] = useState({
+    taggedByMe: data.taggedByMe,
+    seenByMe: data.seenByMe,
+    wishedByMe: data.wishedByMe,
+  });
+
+  useEffect(() => {
+    setOptimistic({
+      taggedByMe: data.taggedByMe,
+      seenByMe: data.seenByMe,
+      wishedByMe: data.wishedByMe,
+    });
+  }, [data.taggedByMe, data.seenByMe, data.wishedByMe]);
 
   const mutation = useMutation({
     mutationFn: (body: PatchBody) => patchTag(data.groupFilmId, body),
+    onMutate: (body) => {
+      const snapshot = { ...optimistic };
+      setOptimistic((prev) => ({
+        ...prev,
+        ...(body.is_tagged !== undefined && { taggedByMe: body.is_tagged }),
+        ...(body.is_seen !== undefined && { seenByMe: body.is_seen }),
+        ...(body.is_wished !== undefined && { wishedByMe: body.is_wished }),
+      }));
+      return snapshot;
+    },
+    onError: (_err, _body, snapshot) => {
+      if (snapshot) setOptimistic(snapshot);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-films"] });
       router.refresh();
@@ -68,7 +151,7 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
     data.totalMembers > 0 && data.taggedMembers.length >= data.totalMembers;
 
   const handleTagClick = () => {
-    if (data.taggedByMe) {
+    if (optimistic.taggedByMe) {
       if (isConsensus) {
         setConfirmUntag(true);
         return;
@@ -83,12 +166,12 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
 
   const handleSeenClick = () => {
     setPendingKind("seen");
-    mutation.mutate({ is_seen: !data.seenByMe });
+    mutation.mutate({ is_seen: !optimistic.seenByMe });
   };
 
   const handleWishClick = () => {
     setPendingKind("wish");
-    mutation.mutate({ is_wished: !data.wishedByMe });
+    mutation.mutate({ is_wished: !optimistic.wishedByMe });
   };
 
   const confirmRemoveTag = () => {
@@ -99,6 +182,10 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
 
   return (
     <section className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+      <ScreenStatusBadge
+        screenStatus={data.screenStatus}
+        theatricalReleaseDate={data.theatricalReleaseDate}
+      />
       {data.urgency && (
         <div
           className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium ${
@@ -152,38 +239,38 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
           onClick={handleTagClick}
           disabled={mutation.isPending && pendingKind === "tag"}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-            data.taggedByMe
+            optimistic.taggedByMe
               ? "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
               : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           }`}
         >
-          {data.taggedByMe ? "Retirer mon tag" : "Je suis intéressé·e"}
+          {optimistic.taggedByMe ? "Retirer mon tag" : "Je suis intéressé·e"}
         </button>
         <button
           type="button"
           onClick={handleSeenClick}
           disabled={mutation.isPending && pendingKind === "seen"}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-            data.seenByMe
+            optimistic.seenByMe
               ? "border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
               : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           }`}
         >
-          {data.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
+          {optimistic.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
         </button>
         <button
           type="button"
           onClick={handleWishClick}
           disabled={mutation.isPending && pendingKind === "wish"}
-          aria-pressed={data.wishedByMe}
+          aria-pressed={optimistic.wishedByMe}
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-            data.wishedByMe
+            optimistic.wishedByMe
               ? "border border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
               : "border border-zinc-300 bg-white text-zinc-800 hover:border-rose-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           }`}
         >
-          <span aria-hidden>{data.wishedByMe ? "♥" : "♡"}</span>
-          {data.wishedByMe ? "Dans mes souhaits" : "Ajouter aux souhaits"}
+          <span aria-hidden>{optimistic.wishedByMe ? "♥" : "♡"}</span>
+          {optimistic.wishedByMe ? "Dans mes souhaits" : "Ajouter aux souhaits"}
         </button>
       </div>
 

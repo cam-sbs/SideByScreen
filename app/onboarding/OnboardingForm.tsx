@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createGroup, joinGroup } from "@/app/actions/groups";
+
+const PENDING_TOKEN_KEY = "pending_group_token";
 
 type Mode = "create" | "join";
 
@@ -13,6 +15,26 @@ export function OnboardingForm() {
   const [error, setError] = useState<string | null>(null);
   const [groupName, setGroupName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem(PENDING_TOKEN_KEY);
+      if (token) {
+        setMode("join");
+        setInviteCode(token);
+      }
+    } catch {
+      // localStorage indisponible
+    }
+  }, []);
+
+  function consumePendingToken() {
+    try {
+      localStorage.removeItem(PENDING_TOKEN_KEY);
+    } catch {
+      // localStorage indisponible
+    }
+  }
 
   function submit() {
     setError(null);
@@ -41,10 +63,13 @@ export function OnboardingForm() {
           : await joinGroup(formData);
 
       if ("error" in result) {
+        // Token consommé même en cas d'erreur (expiré ou invalide)
+        consumePendingToken();
         setError(result.error);
         return;
       }
 
+      consumePendingToken();
       router.push("/library");
       router.refresh();
     });
@@ -64,6 +89,7 @@ export function OnboardingForm() {
           onClick={() => {
             setMode("create");
             setError(null);
+            consumePendingToken();
           }}
           className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
             mode === "create"

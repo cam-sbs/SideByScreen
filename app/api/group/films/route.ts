@@ -1,5 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, getMovieReleaseDates } from "@/lib/tmdb";
+import {
+  type ScreenStatus,
+  computeScreenStatus,
+  extractTheatricalReleaseDate,
+} from "@/lib/screenStatus";
+
+export type { ScreenStatus };
 
 export type GroupFilmMember = {
   id: string;
@@ -28,16 +35,22 @@ export type GroupFilmCard = {
   isConsensus: boolean;
   hasUrgency: boolean;
   genres: GroupFilmGenre[];
+  // Screen status fields
+  screenStatus: ScreenStatus;
+  theatricalReleaseDate: string | null;
+  salonOverride: boolean;
 };
 
-function urgencyRank(releaseDate: string | null): 0 | 1 | 2 {
-  if (!releaseDate) return 2;
-  const release = new Date(releaseDate);
+/** Returns 0 (most urgent / red) → 1 (orange) → 2 (no urgency).
+ *  Used for sorting in_theaters films: red first, then orange, then recent. */
+function urgencyRank(theatricalReleaseDate: string | null): 0 | 1 | 2 {
+  if (!theatricalReleaseDate) return 2;
+  const release = new Date(theatricalReleaseDate);
   if (Number.isNaN(release.getTime())) return 2;
   const diffDays = (Date.now() - release.getTime()) / (1000 * 60 * 60 * 24);
-  if (diffDays < 14) return 2;
-  if (diffDays <= 21) return 1;
-  return 0;
+  if (diffDays > 21) return 0;
+  if (diffDays >= 14) return 1;
+  return 2;
 }
 
 export async function GET() {
@@ -64,7 +77,7 @@ export async function GET() {
   const { data: filmsData, error: filmsError } = await supabase
     .from("group_films")
     .select(
-      "id, tmdb_id, added_at, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
+      "id, tmdb_id, added_at, screen_status, theatrical_release_date, salon_override, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
     )
     .eq("group_id", profile.group_id)
     .eq("visible", true)
@@ -78,6 +91,9 @@ export async function GET() {
     id: string;
     tmdb_id: number;
     added_at: string;
+    screen_status: ScreenStatus;
+    theatrical_release_date: string | null;
+    salon_override: boolean;
     added_by: { id: string; name: string; avatar_url: string | null } | null;
   }[];
 
@@ -173,6 +189,9 @@ export async function GET() {
       }
 
       const taggedMembers = taggedByFilm.get(film.id) ?? [];
+      const theatricalReleaseDate = film.theatrical_release_date;
+      const screenStatus = film.screen_status;
+
       return {
         id: film.id,
         tmdbId: film.tmdb_id,
@@ -194,23 +213,15 @@ export async function GET() {
         releaseDate,
         isConsensus:
           totalMembers > 0 && taggedMembers.length >= totalMembers,
-        hasUrgency: urgencyRank(releaseDate) > 0,
+        hasUrgency:
+          screenStatus === "in_theaters" && urgencyRank(theatricalReleaseDate) < 2,
         genres,
+        screenStatus,
+        theatricalReleaseDate,
+        salonOverride: film.salon_override,
       };
     }),
   );
-
-  cards.sort((a, b) => {
-    if (a.isConsensus !== b.isConsensus) return a.isConsensus ? -1 : 1;
-    if (a.isConsensus) {
-      const rankDiff = urgencyRank(a.releaseDate) - urgencyRank(b.releaseDate);
-      if (rankDiff !== 0) return rankDiff;
-      return (
-        new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime()
-      );
-    }
-    return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-  });
 
   return Response.json({ films: cards });
 }
@@ -254,6 +265,23 @@ export async function POST(request: Request) {
       { error: "Ce film est déjà dans la liste", id: data.film_id },
       { status: 409 },
     );
+  }
+
+  // Enrich with FR theatrical release date from TMDB
+  try {
+    const releaseDates = await getMovieReleaseDates(tmdbId);
+    const theatricalReleaseDate = extractTheatricalReleaseDate(releaseDates.results);
+    const screenStatus = computeScreenStatus(theatricalReleaseDate);
+
+    await supabase
+      .from("group_films")
+      .update({
+        theatrical_release_date: theatricalReleaseDate,
+        screen_status: screenStatus,
+      })
+      .eq("id", data.film_id);
+  } catch {
+    // Non-blocking: film is added, screen_status stays 'unknown'
   }
 
   return Response.json({ id: data.film_id }, { status: 201 });

@@ -46,8 +46,10 @@ export default async function FilmPage({ params }: Props) {
 
   const year = movie.release_date ? movie.release_date.slice(0, 4) : null;
 
-  const social = await fetchFilmSocial(movieId, movie.release_date || null);
-  const screenings = await fetchFilmScreenings(movieId);
+  const [social, screenings] = await Promise.all([
+    fetchFilmSocial(movieId, movie.release_date || null),
+    fetchFilmScreenings(movieId),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -94,7 +96,7 @@ export default async function FilmPage({ params }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {social && <FilmSocial data={social} />}
+          {social && <FilmSocial data={social} movieTitle={movie.title} />}
           {screenings && <FilmScreenings data={screenings} />}
 
           <div className="space-y-1">
@@ -218,30 +220,39 @@ export default async function FilmPage({ params }: Props) {
   );
 }
 
-async function fetchFilmSocial(
-  tmdbId: number,
-  releaseDate: string | null,
-): Promise<FilmSocialData | null> {
+async function fetchUserContext(): Promise<{
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  groupId: string;
+} | null> {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-
   const { data: profile } = await supabase
     .from("users")
     .select("group_id")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.group_id) return null;
+  return { supabase, userId: user.id, groupId: profile.group_id };
+}
+
+async function fetchFilmSocial(
+  tmdbId: number,
+  releaseDate: string | null,
+): Promise<FilmSocialData | null> {
+  const ctx = await fetchUserContext();
+  if (!ctx) return null;
+  const { supabase, userId, groupId } = ctx;
 
   const { data: filmRow } = await supabase
     .from("group_films")
     .select(
-      "id, added_at, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
+      "id, added_at, screen_status, theatrical_release_date, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
     )
-    .eq("group_id", profile.group_id)
+    .eq("group_id", groupId)
     .eq("tmdb_id", tmdbId)
     .eq("visible", true)
     .maybeSingle();
@@ -251,13 +262,15 @@ async function fetchFilmSocial(
   const film = filmRow as unknown as {
     id: string;
     added_at: string;
+    screen_status: "in_theaters" | "coming_soon" | "salon" | "unknown";
+    theatrical_release_date: string | null;
     added_by: { id: string; name: string; avatar_url: string | null } | null;
   };
 
   const { count: memberCount } = await supabase
     .from("users")
     .select("id", { count: "exact", head: true })
-    .eq("group_id", profile.group_id);
+    .eq("group_id", groupId);
 
   const { data: tagsData } = await supabase
     .from("user_film_tags")
@@ -282,11 +295,11 @@ async function fetchFilmSocial(
       avatarUrl: t.user!.avatar_url,
     }));
   const taggedByMe = tags.some(
-    (t) => t.user_id === user.id && t.is_tagged,
+    (t) => t.user_id === userId && t.is_tagged,
   );
-  const seenByMe = tags.some((t) => t.user_id === user.id && t.is_seen);
+  const seenByMe = tags.some((t) => t.user_id === userId && t.is_seen);
   const wishedByMe = tags.some(
-    (t) => t.user_id === user.id && t.is_wished,
+    (t) => t.user_id === userId && t.is_wished,
   );
 
   return {
@@ -305,30 +318,22 @@ async function fetchFilmSocial(
     wishedByMe,
     totalMembers: memberCount ?? 0,
     urgency: computeUrgency(releaseDate),
+    screenStatus: film.screen_status,
+    theatricalReleaseDate: film.theatrical_release_date,
   };
 }
 
 async function fetchFilmScreenings(
   tmdbId: number,
 ): Promise<FilmScreeningsData | null> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("users")
-    .select("group_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile?.group_id) return null;
+  const ctx = await fetchUserContext();
+  if (!ctx) return null;
+  const { supabase, userId, groupId } = ctx;
 
   const { data: filmRow } = await supabase
     .from("group_films")
     .select("id")
-    .eq("group_id", profile.group_id)
+    .eq("group_id", groupId)
     .eq("tmdb_id", tmdbId)
     .maybeSingle();
   if (!filmRow) return null;
@@ -337,7 +342,7 @@ async function fetchFilmScreenings(
     supabase
       .from("users")
       .select("id, name, avatar_url")
-      .eq("group_id", profile.group_id)
+      .eq("group_id", groupId)
       .order("name"),
     supabase
       .from("film_screenings")
@@ -374,7 +379,7 @@ async function fetchFilmScreenings(
         avatarUrl: p.user!.avatar_url,
         status: p.status,
       }));
-    const mine = s.participants.find((p) => p.user_id === user.id);
+    const mine = s.participants.find((p) => p.user_id === userId);
     return {
       id: s.id,
       scheduledAt: s.scheduled_at,
@@ -386,7 +391,7 @@ async function fetchFilmScreenings(
 
   return {
     groupFilmId: filmRow.id,
-    currentUserId: user.id,
+    currentUserId: userId,
     groupMembers,
     screenings,
   };

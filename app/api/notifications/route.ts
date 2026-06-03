@@ -6,6 +6,7 @@ export type NotificationType =
   | "film_tagged"
   | "film_untagged"
   | "film_seen"
+  | "film_archived"
   | "screening_invited"
   | "screening_cancelled";
 

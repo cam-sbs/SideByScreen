@@ -32,10 +32,12 @@ type PatchBody = {
   is_wished?: boolean;
 };
 
+type PatchResponse = { ok: boolean; wasArchived: boolean };
+
 async function patchTag(
   groupFilmId: string,
   body: PatchBody,
-): Promise<void> {
+): Promise<PatchResponse> {
   const res = await fetch(`/api/group/films/${groupFilmId}/tag`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -47,6 +49,7 @@ async function patchTag(
     };
     throw new Error(payload.error ?? "Erreur lors de la mise à jour");
   }
+  return res.json() as Promise<PatchResponse>;
 }
 
 function ScreenStatusBadge({
@@ -102,13 +105,20 @@ function ScreenStatusBadge({
   return null;
 }
 
-export function FilmSocial({ data }: { data: FilmSocialData }) {
+export function FilmSocial({
+  data,
+  movieTitle,
+}: {
+  data: FilmSocialData;
+  movieTitle: string;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [confirmUntag, setConfirmUntag] = useState(false);
   const [pendingKind, setPendingKind] = useState<
     "tag" | "seen" | "wish" | null
   >(null);
+  const [archivedToast, setArchivedToast] = useState(false);
   const [optimistic, setOptimistic] = useState({
     taggedByMe: data.taggedByMe,
     seenByMe: data.seenByMe,
@@ -138,9 +148,13 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
     onError: (_err, _body, snapshot) => {
       if (snapshot) setOptimistic(snapshot);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["group-films"] });
       router.refresh();
+      if (result.wasArchived) {
+        setArchivedToast(true);
+        setTimeout(() => setArchivedToast(false), 4000);
+      }
     },
     onSettled: () => {
       setPendingKind(null);
@@ -280,6 +294,21 @@ export function FilmSocial({ data }: { data: FilmSocialData }) {
             ? mutation.error.message
             : "Erreur"}
         </p>
+      )}
+
+      {archivedToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
+        >
+          <div className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-3 text-sm text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900">
+            <span aria-hidden className="text-base">🗂️</span>
+            <span>
+              <span className="font-medium">« {movieTitle} »</span> a été archivé — tous les membres l&apos;ont vu ou retiré leur tag
+            </span>
+          </div>
+        </div>
       )}
 
       {confirmUntag && (

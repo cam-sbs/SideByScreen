@@ -47,8 +47,12 @@ export function NotificationCenter() {
             table: "notifications",
             filter: `user_id=eq.${userId}`,
           },
-          () => {
+          (payload) => {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            const newRecord = (payload as { new?: { type?: string } }).new;
+            if (newRecord?.type === "film_archived") {
+              queryClient.invalidateQueries({ queryKey: ["group-films"] });
+            }
           },
         )
         .subscribe();
@@ -256,6 +260,8 @@ function formatMessage(n: NotificationItem): string {
       return `${who} a retiré son positionnement sur ${title}`;
     case "film_seen":
       return `${who} a vu ${title}`;
+    case "film_archived":
+      return `« ${title} » a été archivé — tous les membres l'ont vu ou retiré leur tag`;
     case "screening_invited":
       return `${who} vous invite à une séance pour ${title}`;
     case "screening_cancelled":

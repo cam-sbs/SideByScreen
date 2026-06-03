@@ -126,7 +126,7 @@ export async function PATCH(
     }
   }
 
-  const { error: recalcError } = await supabase.rpc(
+  const { data: visibilityResult, error: recalcError } = await supabase.rpc(
     "recalculate_group_film_visibility",
     { p_group_film_id: groupFilmId },
   );
@@ -134,5 +134,6 @@ export async function PATCH(
     console.error("[tag] recalculate_group_film_visibility failed", recalcError);
   }
 
-  return Response.json({ ok: true });
+  const wasArchived = visibilityResult === "just_archived";
+  return Response.json({ ok: true, wasArchived });
 }

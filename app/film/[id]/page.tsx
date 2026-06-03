@@ -96,7 +96,7 @@ export default async function FilmPage({ params }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {social && <FilmSocial data={social} />}
+          {social && <FilmSocial data={social} movieTitle={movie.title} />}
           {screenings && <FilmScreenings data={screenings} />}
 
           <div className="space-y-1">

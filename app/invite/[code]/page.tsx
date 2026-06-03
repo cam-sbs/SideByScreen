@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InviteActions } from "./InviteActions";
+import { InviteTokenPersist } from "./InviteTokenPersist";
 
 type Props = {
   params: Promise<{ code: string }>;
@@ -61,6 +62,7 @@ export default async function InvitePage({ params }: Props) {
     const nextPath = `/invite/${encodeURIComponent(code)}`;
     return (
       <InviteShell>
+        <InviteTokenPersist code={code} />
         <div className="space-y-2 text-center">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Vous êtes invité à rejoindre

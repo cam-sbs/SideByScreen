@@ -159,7 +159,7 @@ function countActiveFilters(f: Filters): number {
 }
 
 export function FilmsGrid() {
-  const { data, isPending, isError, error } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["group-films"],
     queryFn: fetchFilms,
   });
@@ -217,14 +217,30 @@ export function FilmsGrid() {
     return (
       <div
         role="status"
+        aria-label="Chargement des films"
         aria-live="polite"
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="h-48 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 sm:h-80"
-          />
+            className="flex gap-3 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 sm:flex-col sm:gap-0"
+          >
+            <div className="relative aspect-[2/3] w-24 flex-shrink-0 animate-pulse bg-zinc-200 dark:bg-zinc-800 sm:w-full" />
+            <div className="flex flex-1 flex-col justify-between gap-2 p-3">
+              <div className="space-y-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                <div className="flex -space-x-1.5">
+                  <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800 ring-2 ring-white dark:ring-zinc-950" />
+                  <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800 ring-2 ring-white dark:ring-zinc-950" />
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -232,8 +248,17 @@ export function FilmsGrid() {
 
   if (isError) {
     return (
-      <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-        {error instanceof Error ? error.message : "Erreur inconnue"}
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+        <p className="text-sm text-red-700 dark:text-red-400">
+          {error instanceof Error ? error.message : "Erreur inconnue"}
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded-full border border-red-300 px-4 py-1.5 text-sm font-medium text-red-700 hover:border-red-500 hover:bg-red-100 dark:border-red-700 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900"
+        >
+          Réessayer
+        </button>
       </div>
     );
   }
@@ -747,9 +772,7 @@ function FilmCard({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
-              —
-            </div>
+            <FilmPosterPlaceholder />
           )}
 
           {film.isConsensus && (
@@ -884,6 +907,34 @@ function FilmCard({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function FilmPosterPlaceholder() {
+  return (
+    <div className="flex h-full w-full items-center justify-center text-zinc-300 dark:text-zinc-700">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="2" y="2" width="20" height="20" rx="2" />
+        <line x1="7" y1="2" x2="7" y2="22" />
+        <line x1="17" y1="2" x2="17" y2="22" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="2" y1="7" x2="7" y2="7" />
+        <line x1="2" y1="17" x2="7" y2="17" />
+        <line x1="17" y1="7" x2="22" y2="7" />
+        <line x1="17" y1="17" x2="22" y2="17" />
+      </svg>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   type ScreeningView,
   type ScreeningParticipantView,
 } from "./FilmScreenings";
+import { RetryButton } from "./RetryButton";
 import type { ScreeningParticipantStatus } from "@/types/supabase";
 
 type Props = {
@@ -58,9 +59,12 @@ export default async function FilmPage({ params }: Props) {
     console.error("[film] getMovieDetails failed", error);
     return (
       <FilmShell>
-        <p className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-          Impossible de charger ce film pour le moment.
-        </p>
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+          <p className="text-sm text-red-700 dark:text-red-400">
+            Impossible de charger ce film pour le moment.
+          </p>
+          <RetryButton />
+        </div>
       </FilmShell>
     );
   }
@@ -111,9 +115,7 @@ export default async function FilmPage({ params }: Props) {
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
-                Pas d&apos;affiche
-              </div>
+              <PosterPlaceholder label="Pas d'affiche" />
             )}
           </div>
         </div>
@@ -458,6 +460,37 @@ function formatRuntime(minutes: number): string {
   if (h === 0) return `${m} min`;
   if (m === 0) return `${h} h`;
   return `${h} h ${m.toString().padStart(2, "0")}`;
+}
+
+function PosterPlaceholder({ label }: { label?: string }) {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-300 dark:text-zinc-700">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="36"
+        height="36"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="2" y="2" width="20" height="20" rx="2" />
+        <line x1="7" y1="2" x2="7" y2="22" />
+        <line x1="17" y1="2" x2="17" y2="22" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="2" y1="7" x2="7" y2="7" />
+        <line x1="2" y1="17" x2="7" y2="17" />
+        <line x1="17" y1="7" x2="22" y2="7" />
+        <line x1="17" y1="17" x2="22" y2="17" />
+      </svg>
+      {label && (
+        <span className="text-xs text-zinc-400 dark:text-zinc-600">{label}</span>
+      )}
+    </div>
+  );
 }
 
 function FilmShell({ children }: { children: React.ReactNode }) {

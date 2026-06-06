@@ -70,7 +70,7 @@ export function OnboardingForm() {
       }
 
       consumePendingToken();
-      router.push("/library");
+      router.push("/");
       router.refresh();
     });
   }

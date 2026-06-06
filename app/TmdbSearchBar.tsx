@@ -34,12 +34,13 @@ export function TmdbSearchBar() {
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
 
   useEffect(() => {
     if (!toast) return;
-    const id = setTimeout(() => setToast(null), 3500);
+    const id = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(id);
   }, [toast]);
 
@@ -72,9 +73,11 @@ export function TmdbSearchBar() {
     onSuccess: ({ status, body }, movie) => {
       if (status === 201) {
         setToast({ kind: "success", message: `« ${movie.title} » ajouté` });
+        setAddedIds((prev) => new Set(prev).add(movie.id));
         queryClient.invalidateQueries({ queryKey: ["group-films"] });
       } else if (status === 409) {
         setToast({ kind: "info", message: "Ce film est déjà dans la liste" });
+        setAddedIds((prev) => new Set(prev).add(movie.id));
       } else {
         setToast({
           kind: "error",
@@ -144,6 +147,7 @@ export function TmdbSearchBar() {
               <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {results.map((movie) => {
                   const isPending = pendingId === movie.id;
+                  const isAdded = addedIds.has(movie.id);
                   return (
                     <li key={movie.id} role="option" aria-selected="false">
                       <div className="flex items-center gap-3 p-3">
@@ -181,11 +185,15 @@ export function TmdbSearchBar() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => addMutation.mutate(movie)}
-                          disabled={isPending || addMutation.isPending}
-                          className="flex-shrink-0 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                          onClick={() => !isAdded && addMutation.mutate(movie)}
+                          disabled={isPending || addMutation.isPending || isAdded}
+                          className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
+                            isAdded
+                              ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white"
+                              : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                          }`}
                         >
-                          {isPending ? "Ajout…" : "Ajouter"}
+                          {isPending ? "Ajout…" : isAdded ? "Ajouté" : "Ajouter"}
                         </button>
                       </div>
                     </li>

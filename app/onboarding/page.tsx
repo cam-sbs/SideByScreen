@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
     .maybeSingle();
 
   if (profile?.group_id) {
-    redirect("/library");
+    redirect("/");
   }
 
   return (

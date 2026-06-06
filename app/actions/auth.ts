@@ -66,7 +66,7 @@ export async function login(formData: FormData) {
     }
   }
 
-  redirect(next ?? "/library");
+  redirect(next ?? "/");
 }
 
 export async function loginWithOAuth(provider: "google" | "apple") {

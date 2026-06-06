@@ -20,7 +20,7 @@ export function InviteActions({ code }: { code: string }) {
         setError(result.error);
         return;
       }
-      router.push("/library");
+      router.push("/");
       router.refresh();
     });
   }

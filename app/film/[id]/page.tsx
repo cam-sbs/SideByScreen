@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +18,27 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+// Per-request deduplication: both fetchFilmSocial and fetchFilmScreenings call
+// this, and they now run concurrently — cache() ensures a single Supabase round-trip.
+const fetchUserContext = cache(async (): Promise<{
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  groupId: string;
+} | null> => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from("users")
+    .select("group_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile?.group_id) return null;
+  return { supabase, userId: user.id, groupId: profile.group_id };
+});
+
 export default async function FilmPage({ params }: Props) {
   const { id } = await params;
   const movieId = parseInt(id, 10);
@@ -23,9 +46,14 @@ export default async function FilmPage({ params }: Props) {
     notFound();
   }
 
+  // Kick off all three fetches in parallel before awaiting any of them.
+  const moviePromise = getMovieDetails(movieId);
+  const socialPromise = fetchFilmSocial(movieId);
+  const screeningsPromise = fetchFilmScreenings(movieId);
+
   let movie: TMDBMovieDetails;
   try {
-    movie = await getMovieDetails(movieId);
+    movie = await moviePromise;
   } catch (error) {
     console.error("[film] getMovieDetails failed", error);
     return (
@@ -45,11 +73,6 @@ export default async function FilmPage({ params }: Props) {
     .slice(0, 6);
 
   const year = movie.release_date ? movie.release_date.slice(0, 4) : null;
-
-  const [social, screenings] = await Promise.all([
-    fetchFilmSocial(movieId, movie.release_date || null),
-    fetchFilmScreenings(movieId),
-  ]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -96,8 +119,13 @@ export default async function FilmPage({ params }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {social && <FilmSocial data={social} movieTitle={movie.title} />}
-          {screenings && <FilmScreenings data={screenings} />}
+          {/* Social and screenings stream in from Supabase while movie info is already visible. */}
+          <Suspense fallback={<FilmSocialSkeleton />}>
+            <FilmSocialSection promise={socialPromise} movieTitle={movie.title} />
+          </Suspense>
+          <Suspense fallback={<FilmScreeningsSkeleton />}>
+            <FilmScreeningsSection promise={screeningsPromise} />
+          </Suspense>
 
           <div className="space-y-1">
             <h1 className="text-2xl font-bold sm:text-3xl">
@@ -220,29 +248,44 @@ export default async function FilmPage({ params }: Props) {
   );
 }
 
-async function fetchUserContext(): Promise<{
-  supabase: Awaited<ReturnType<typeof createClient>>;
-  userId: string;
-  groupId: string;
-} | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await supabase
-    .from("users")
-    .select("group_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile?.group_id) return null;
-  return { supabase, userId: user.id, groupId: profile.group_id };
+// Async server components that await the pre-started promises.
+// They suspend inside their Suspense boundaries while Supabase responds.
+
+async function FilmSocialSection({
+  promise,
+  movieTitle,
+}: {
+  promise: Promise<FilmSocialData | null>;
+  movieTitle: string;
+}) {
+  const social = await promise;
+  if (!social) return null;
+  return <FilmSocial data={social} movieTitle={movieTitle} />;
 }
 
-async function fetchFilmSocial(
-  tmdbId: number,
-  releaseDate: string | null,
-): Promise<FilmSocialData | null> {
+async function FilmScreeningsSection({
+  promise,
+}: {
+  promise: Promise<FilmScreeningsData | null>;
+}) {
+  const screenings = await promise;
+  if (!screenings) return null;
+  return <FilmScreenings data={screenings} />;
+}
+
+function FilmSocialSkeleton() {
+  return (
+    <div className="h-28 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
+  );
+}
+
+function FilmScreeningsSkeleton() {
+  return (
+    <div className="h-20 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
+  );
+}
+
+async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
   const ctx = await fetchUserContext();
   if (!ctx) return null;
   const { supabase, userId, groupId } = ctx;
@@ -250,7 +293,7 @@ async function fetchFilmSocial(
   const { data: filmRow } = await supabase
     .from("group_films")
     .select(
-      "id, added_at, screen_status, theatrical_release_date, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
+      "id, added_at, screen_status, theatrical_release_date, salon_override, added_by:users!group_films_added_by_user_id_fkey(id, name, avatar_url)",
     )
     .eq("group_id", groupId)
     .eq("tmdb_id", tmdbId)
@@ -264,6 +307,7 @@ async function fetchFilmSocial(
     added_at: string;
     screen_status: "in_theaters" | "coming_soon" | "salon" | "unknown";
     theatrical_release_date: string | null;
+    salon_override: boolean;
     added_by: { id: string; name: string; avatar_url: string | null } | null;
   };
 
@@ -294,13 +338,9 @@ async function fetchFilmSocial(
       name: t.user!.name,
       avatarUrl: t.user!.avatar_url,
     }));
-  const taggedByMe = tags.some(
-    (t) => t.user_id === userId && t.is_tagged,
-  );
+  const taggedByMe = tags.some((t) => t.user_id === userId && t.is_tagged);
   const seenByMe = tags.some((t) => t.user_id === userId && t.is_seen);
-  const wishedByMe = tags.some(
-    (t) => t.user_id === userId && t.is_wished,
-  );
+  const wishedByMe = tags.some((t) => t.user_id === userId && t.is_wished);
 
   return {
     groupFilmId: film.id,
@@ -317,7 +357,8 @@ async function fetchFilmSocial(
     seenByMe,
     wishedByMe,
     totalMembers: memberCount ?? 0,
-    urgency: computeUrgency(releaseDate),
+    // Use theatrical_release_date from DB — no TMDB dependency, enables parallel fetch.
+    urgency: computeUrgency(film.theatrical_release_date),
     screenStatus: film.screen_status,
     theatricalReleaseDate: film.theatrical_release_date,
   };

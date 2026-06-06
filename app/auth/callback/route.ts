@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         }
       }
 
-      return NextResponse.redirect(new URL("/library", origin));
+      return NextResponse.redirect(new URL("/", origin));
     }
   }
 

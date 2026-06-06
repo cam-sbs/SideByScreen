@@ -1,6 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
-import { createServerClient } from "@supabase/ssr";
 
 const publicPaths = [
   "/auth/login",
@@ -9,74 +7,31 @@ const publicPaths = [
   "/invite/",
 ];
 
-// Routes accessibles sans groupe (profil + onboarding + logout côté /auth + invitation).
-const noGroupAllowedPrefixes = [
-  "/onboarding",
-  "/profile",
-  "/auth",
-  "/invite/",
-];
-
-export default async function proxy(request: NextRequest) {
-  const response = await updateSession(request);
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
-  if (isPublic) {
-    return response;
+  if (publicPaths.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll() {},
-      },
-    },
-  );
+  // Cookie-only session detection — zero network call.
+  // @supabase/ssr stores tokens in sb-*-auth-token cookies.
+  // Expired/invalid tokens are caught by getUser() in each Server Component.
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!hasSession) {
     const loginUrl = new URL("/auth/login", request.url);
-    const next = pathname + request.nextUrl.search;
-    loginUrl.searchParams.set("next", next);
+    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
-  const isNoGroupAllowed = noGroupAllowedPrefixes.some((p) =>
-    pathname.startsWith(p),
-  );
-
-  if (!isNoGroupAllowed) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("group_id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!profile?.group_id) {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
-    }
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     "/((?!_next/static|_next/image|favicon.ico|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

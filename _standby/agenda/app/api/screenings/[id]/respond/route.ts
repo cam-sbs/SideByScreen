@@ -1,3 +1,4 @@
+// [STAND-BY] Feature agenda — à réactiver en v-next
 import { createClient } from "@/lib/supabase/server";
 
 type Body = {

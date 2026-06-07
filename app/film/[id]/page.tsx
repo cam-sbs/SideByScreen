@@ -6,14 +6,7 @@ import { notFound } from "next/navigation";
 import { getMovieDetails, type TMDBMovieDetails } from "@/lib/tmdb";
 import { createClient } from "@/lib/supabase/server";
 import { FilmSocial, type FilmSocialData } from "./FilmSocial";
-import {
-  FilmScreenings,
-  type FilmScreeningsData,
-  type ScreeningView,
-  type ScreeningParticipantView,
-} from "./FilmScreenings";
 import { RetryButton } from "./RetryButton";
-import type { ScreeningParticipantStatus } from "@/types/supabase";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -50,8 +43,6 @@ export default async function FilmPage({ params }: Props) {
   // Kick off all three fetches in parallel before awaiting any of them.
   const moviePromise = getMovieDetails(movieId);
   const socialPromise = fetchFilmSocial(movieId);
-  const screeningsPromise = fetchFilmScreenings(movieId);
-
   let movie: TMDBMovieDetails;
   try {
     movie = await moviePromise;
@@ -121,13 +112,10 @@ export default async function FilmPage({ params }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {/* Social and screenings stream in from Supabase while movie info is already visible. */}
           <Suspense fallback={<FilmSocialSkeleton />}>
             <FilmSocialSection promise={socialPromise} movieTitle={movie.title} />
           </Suspense>
-          <Suspense fallback={<FilmScreeningsSkeleton />}>
-            <FilmScreeningsSection promise={screeningsPromise} />
-          </Suspense>
+          {/* [STAND-BY] Agenda */}
 
           <div className="space-y-1">
             <h1 className="text-2xl font-bold sm:text-3xl">
@@ -265,25 +253,9 @@ async function FilmSocialSection({
   return <FilmSocial data={social} movieTitle={movieTitle} />;
 }
 
-async function FilmScreeningsSection({
-  promise,
-}: {
-  promise: Promise<FilmScreeningsData | null>;
-}) {
-  const screenings = await promise;
-  if (!screenings) return null;
-  return <FilmScreenings data={screenings} />;
-}
-
 function FilmSocialSkeleton() {
   return (
     <div className="h-28 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
-  );
-}
-
-function FilmScreeningsSkeleton() {
-  return (
-    <div className="h-20 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
   );
 }
 
@@ -376,80 +348,6 @@ async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
     urgency: computeUrgency(film.theatrical_release_date),
     screenStatus: film.screen_status,
     theatricalReleaseDate: film.theatrical_release_date,
-  };
-}
-
-async function fetchFilmScreenings(
-  tmdbId: number,
-): Promise<FilmScreeningsData | null> {
-  const ctx = await fetchUserContext();
-  if (!ctx) return null;
-  const { supabase, userId, groupId } = ctx;
-
-  const { data: filmRow } = await supabase
-    .from("group_films")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("tmdb_id", tmdbId)
-    .maybeSingle();
-  if (!filmRow) return null;
-
-  const [membersRes, screeningsRes] = await Promise.all([
-    supabase
-      .from("users")
-      .select("id, name, avatar_url")
-      .eq("group_id", groupId)
-      .order("name"),
-    supabase
-      .from("film_screenings")
-      .select(
-        "id, scheduled_at, scheduled_by_user_id, participants:screening_participants!screening_participants_screening_id_fkey(user_id, status, user:users!screening_participants_user_id_fkey(id, name, avatar_url))",
-      )
-      .eq("group_film_id", filmRow.id)
-      .order("scheduled_at", { ascending: true }),
-  ]);
-
-  const groupMembers = (membersRes.data ?? []).map((m) => ({
-    id: m.id as string,
-    name: m.name as string,
-    avatarUrl: (m.avatar_url as string | null) ?? null,
-  }));
-
-  const rows = (screeningsRes.data ?? []) as unknown as {
-    id: string;
-    scheduled_at: string;
-    scheduled_by_user_id: string;
-    participants: {
-      user_id: string;
-      status: ScreeningParticipantStatus;
-      user: { id: string; name: string; avatar_url: string | null } | null;
-    }[];
-  }[];
-
-  const screenings: ScreeningView[] = rows.map((s) => {
-    const participants: ScreeningParticipantView[] = s.participants
-      .filter((p) => p.user)
-      .map((p) => ({
-        id: p.user!.id,
-        name: p.user!.name,
-        avatarUrl: p.user!.avatar_url,
-        status: p.status,
-      }));
-    const mine = s.participants.find((p) => p.user_id === userId);
-    return {
-      id: s.id,
-      scheduledAt: s.scheduled_at,
-      organizerId: s.scheduled_by_user_id,
-      myStatus: mine ? mine.status : null,
-      participants,
-    };
-  });
-
-  return {
-    groupFilmId: filmRow.id,
-    currentUserId: userId,
-    groupMembers,
-    screenings,
   };
 }
 

@@ -1,3 +1,4 @@
+// [STAND-BY] Feature agenda — à réactiver en v-next
 "use client";
 
 import Link from "next/link";

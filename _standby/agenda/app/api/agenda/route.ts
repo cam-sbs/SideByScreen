@@ -1,3 +1,4 @@
+// [STAND-BY] Feature agenda — à réactiver en v-next
 import { createClient } from "@/lib/supabase/server";
 import { getMovieDetails } from "@/lib/tmdb";
 import type { ScreeningParticipantStatus } from "@/types/supabase";

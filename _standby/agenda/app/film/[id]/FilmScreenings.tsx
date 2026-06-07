@@ -1,3 +1,4 @@
+// [STAND-BY] Feature agenda — à réactiver en v-next
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

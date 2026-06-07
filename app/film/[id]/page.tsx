@@ -321,7 +321,7 @@ async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
   const { data: tagsData } = await supabase
     .from("user_film_tags")
     .select(
-      "user_id, is_seen, is_tagged, is_wished, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
+      "user_id, is_seen, is_tagged, is_wished, watched_together_at, user:users!user_film_tags_user_id_fkey(id, name, avatar_url)",
     )
     .eq("group_film_id", film.id);
 
@@ -330,6 +330,7 @@ async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
     is_seen: boolean;
     is_tagged: boolean;
     is_wished: boolean;
+    watched_together_at: string | null;
     user: { id: string; name: string; avatar_url: string | null } | null;
   }[];
 
@@ -343,6 +344,16 @@ async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
   const taggedByMe = tags.some((t) => t.user_id === userId && t.is_tagged);
   const seenByMe = tags.some((t) => t.user_id === userId && t.is_seen);
   const wishedByMe = tags.some((t) => t.user_id === userId && t.is_wished);
+  const watchedTogetherByMe = tags.some(
+    (t) => t.user_id === userId && t.watched_together_at !== null,
+  );
+  const watchedTogetherMembers = tags
+    .filter((t) => t.is_tagged && t.watched_together_at !== null && t.user)
+    .map((t) => ({
+      id: t.user!.id,
+      name: t.user!.name,
+      avatarUrl: t.user!.avatar_url,
+    }));
 
   return {
     groupFilmId: film.id,
@@ -358,6 +369,8 @@ async function fetchFilmSocial(tmdbId: number): Promise<FilmSocialData | null> {
     taggedByMe,
     seenByMe,
     wishedByMe,
+    watchedTogetherByMe,
+    watchedTogetherMembers,
     totalMembers: memberCount ?? 0,
     // Use theatrical_release_date from DB — no TMDB dependency, enables parallel fetch.
     urgency: computeUrgency(film.theatrical_release_date),

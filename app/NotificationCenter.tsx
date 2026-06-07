@@ -50,7 +50,10 @@ export function NotificationCenter() {
           (payload) => {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
             const newRecord = (payload as { new?: { type?: string } }).new;
-            if (newRecord?.type === "film_archived") {
+            if (
+              newRecord?.type === "film_archived" ||
+              newRecord?.type === "film_watched_together"
+            ) {
               queryClient.invalidateQueries({ queryKey: ["group-films"] });
             }
           },
@@ -262,6 +265,8 @@ function formatMessage(n: NotificationItem): string {
       return `${who} a vu ${title}`;
     case "film_archived":
       return `« ${title} » a été archivé — tous les membres l'ont vu ou retiré leur tag`;
+    case "film_watched_together":
+      return `${who} a confirmé avoir regardé « ${title} »`;
     case "screening_invited":
       return `${who} vous invite à une séance pour ${title}`;
     case "screening_cancelled":

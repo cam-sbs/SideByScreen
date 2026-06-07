@@ -20,6 +20,8 @@ export type FilmSocialData = {
   taggedByMe: boolean;
   seenByMe: boolean;
   wishedByMe: boolean;
+  watchedTogetherByMe: boolean;
+  watchedTogetherMembers: FilmSocialMember[];
   totalMembers: number;
   urgency: { level: "orange" | "red"; label: string } | null;
   screenStatus: ScreenStatus;
@@ -30,6 +32,7 @@ type PatchBody = {
   is_tagged?: boolean;
   is_seen?: boolean;
   is_wished?: boolean;
+  watched_together?: boolean;
 };
 
 type PatchResponse = { ok: boolean; wasArchived: boolean };
@@ -116,13 +119,14 @@ export function FilmSocial({
   const queryClient = useQueryClient();
   const [confirmUntag, setConfirmUntag] = useState(false);
   const [pendingKind, setPendingKind] = useState<
-    "tag" | "seen" | "wish" | null
+    "tag" | "seen" | "wish" | "watched_together" | null
   >(null);
   const [archivedToast, setArchivedToast] = useState(false);
   const [optimistic, setOptimistic] = useState({
     taggedByMe: data.taggedByMe,
     seenByMe: data.seenByMe,
     wishedByMe: data.wishedByMe,
+    watchedTogetherByMe: data.watchedTogetherByMe,
   });
 
   useEffect(() => {
@@ -130,8 +134,9 @@ export function FilmSocial({
       taggedByMe: data.taggedByMe,
       seenByMe: data.seenByMe,
       wishedByMe: data.wishedByMe,
+      watchedTogetherByMe: data.watchedTogetherByMe,
     });
-  }, [data.taggedByMe, data.seenByMe, data.wishedByMe]);
+  }, [data.taggedByMe, data.seenByMe, data.wishedByMe, data.watchedTogetherByMe]);
 
   const mutation = useMutation({
     mutationFn: (body: PatchBody) => patchTag(data.groupFilmId, body),
@@ -142,6 +147,9 @@ export function FilmSocial({
         ...(body.is_tagged !== undefined && { taggedByMe: body.is_tagged }),
         ...(body.is_seen !== undefined && { seenByMe: body.is_seen }),
         ...(body.is_wished !== undefined && { wishedByMe: body.is_wished }),
+        ...(body.watched_together !== undefined && {
+          watchedTogetherByMe: body.watched_together,
+        }),
       }));
       return snapshot;
     },
@@ -161,6 +169,7 @@ export function FilmSocial({
     },
   });
 
+  const isSalon = data.screenStatus === "salon";
   const isConsensus =
     data.totalMembers > 0 && data.taggedMembers.length >= data.totalMembers;
 
@@ -188,11 +197,20 @@ export function FilmSocial({
     mutation.mutate({ is_wished: !optimistic.wishedByMe });
   };
 
+  const handleWatchedTogetherClick = () => {
+    if (optimistic.watchedTogetherByMe) return;
+    setPendingKind("watched_together");
+    mutation.mutate({ watched_together: true });
+  };
+
   const confirmRemoveTag = () => {
     setConfirmUntag(false);
     setPendingKind("tag");
     mutation.mutate({ is_tagged: false });
   };
+
+  const watchedCount = data.watchedTogetherMembers.length;
+  const taggedCount = data.taggedMembers.length;
 
   return (
     <section className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
@@ -200,7 +218,7 @@ export function FilmSocial({
         screenStatus={data.screenStatus}
         theatricalReleaseDate={data.theatricalReleaseDate}
       />
-      {data.urgency && (
+      {!isSalon && data.urgency && (
         <div
           className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium ${
             data.urgency.level === "red"
@@ -247,6 +265,27 @@ export function FilmSocial({
         )}
       </div>
 
+      {isSalon && taggedCount > 0 && (
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              On l&apos;a regardé
+            </p>
+            <p className="text-sm font-medium">
+              {watchedCount} / {taggedCount}
+            </p>
+          </div>
+          {watchedCount > 0 ? (
+            <AvatarStack
+              members={data.watchedTogetherMembers}
+              checkmarks
+            />
+          ) : (
+            <span className="text-xs text-zinc-400">Pas encore confirmé</span>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -260,18 +299,40 @@ export function FilmSocial({
         >
           {optimistic.taggedByMe ? "Retirer mon tag" : "Je suis intéressé·e"}
         </button>
-        <button
-          type="button"
-          onClick={handleSeenClick}
-          disabled={mutation.isPending && pendingKind === "seen"}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-            optimistic.seenByMe
-              ? "border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-              : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          }`}
-        >
-          {optimistic.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
-        </button>
+
+        {isSalon ? (
+          optimistic.taggedByMe && (
+            <button
+              type="button"
+              onClick={handleWatchedTogetherClick}
+              disabled={
+                optimistic.watchedTogetherByMe ||
+                (mutation.isPending && pendingKind === "watched_together")
+              }
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                optimistic.watchedTogetherByMe
+                  ? "border border-emerald-600 bg-emerald-600 text-white cursor-default"
+                  : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              }`}
+            >
+              {optimistic.watchedTogetherByMe ? "On l'a regardé ✓" : "On l'a regardé"}
+            </button>
+          )
+        ) : (
+          <button
+            type="button"
+            onClick={handleSeenClick}
+            disabled={mutation.isPending && pendingKind === "seen"}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+              optimistic.seenByMe
+                ? "border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
+                : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            }`}
+          >
+            {optimistic.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleWishClick}
@@ -305,7 +366,10 @@ export function FilmSocial({
           <div className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-3 text-sm text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900">
             <span aria-hidden className="text-base">🗂️</span>
             <span>
-              <span className="font-medium">« {movieTitle} »</span> a été archivé — tous les membres l&apos;ont vu ou retiré leur tag
+              <span className="font-medium">« {movieTitle} »</span>
+              {isSalon
+                ? " a été archivé — tous les membres ont confirmé l'avoir regardé"
+                : " a été archivé — tous les membres l'ont vu ou retiré leur tag"}
             </span>
           </div>
         </div>
@@ -346,16 +410,22 @@ export function FilmSocial({
   );
 }
 
-function AvatarStack({ members }: { members: FilmSocialMember[] }) {
+function AvatarStack({
+  members,
+  checkmarks = false,
+}: {
+  members: FilmSocialMember[];
+  checkmarks?: boolean;
+}) {
   const visible = members.slice(0, 5);
   const extra = members.length - visible.length;
   return (
     <div
       className="flex -space-x-2"
-      title={`Positionnés : ${members.map((m) => m.name).join(", ")}`}
+      title={`${checkmarks ? "Ont confirmé" : "Positionnés"} : ${members.map((m) => m.name).join(", ")}`}
     >
       {visible.map((m) => (
-        <MemberAvatar key={m.id} member={m} size={28} bordered />
+        <MemberAvatar key={m.id} member={m} size={28} bordered checkmark={checkmarks} />
       ))}
       {extra > 0 && (
         <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-zinc-200 text-[10px] font-semibold text-zinc-700 dark:border-zinc-950 dark:bg-zinc-700 dark:text-zinc-200">
@@ -370,10 +440,12 @@ function MemberAvatar({
   member,
   size,
   bordered = false,
+  checkmark = false,
 }: {
   member: FilmSocialMember;
   size: number;
   bordered?: boolean;
+  checkmark?: boolean;
 }) {
   const initials = getInitials(member.name);
   const borderClass = bordered
@@ -393,6 +465,14 @@ function MemberAvatar({
         />
       ) : (
         initials
+      )}
+      {checkmark && (
+        <span
+          aria-hidden
+          className="absolute bottom-0 right-0 flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 text-[7px] text-white"
+        >
+          ✓
+        </span>
       )}
     </span>
   );

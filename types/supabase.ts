@@ -11,6 +11,8 @@ export type NotificationType =
   | "film_tagged"
   | "film_untagged"
   | "film_seen"
+  | "film_archived"
+  | "film_watched_together"
   | "film_moved_to_salon"
   | "screening_invited"
   | "screening_cancelled";
@@ -110,21 +112,27 @@ export interface Database {
           group_film_id: string;
           is_seen: boolean;
           is_tagged: boolean;
+          is_wished: boolean;
           seen_at: string | null;
+          watched_together_at: string | null;
         };
         Insert: {
           user_id: string;
           group_film_id: string;
           is_seen?: boolean;
           is_tagged?: boolean;
+          is_wished?: boolean;
           seen_at?: string | null;
+          watched_together_at?: string | null;
         };
         Update: {
           user_id?: string;
           group_film_id?: string;
           is_seen?: boolean;
           is_tagged?: boolean;
+          is_wished?: boolean;
           seen_at?: string | null;
+          watched_together_at?: string | null;
         };
       };
       film_screenings: {

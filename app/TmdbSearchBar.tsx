@@ -95,6 +95,7 @@ export function TmdbSearchBar() {
   const pendingId = addMutation.isPending ? addMutation.variables?.id : null;
 
   return (
+    <>
     <div
       ref={containerRef}
       className="sticky top-0 z-50 -mx-4 bg-white/85 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 dark:bg-zinc-950/85"
@@ -205,21 +206,23 @@ export function TmdbSearchBar() {
         )}
       </div>
 
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto w-fit max-w-[90%] rounded-full px-4 py-2 text-sm font-medium shadow-lg ${
-            toast.kind === "success"
-              ? "bg-emerald-600 text-white"
-              : toast.kind === "error"
-                ? "bg-red-600 text-white"
-                : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
     </div>
+
+    {toast && (
+      <div
+        role="status"
+        aria-live="polite"
+        className={`pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto w-fit max-w-[90%] rounded-full px-4 py-2 text-sm font-medium shadow-lg ${
+          toast.kind === "success"
+            ? "bg-emerald-600 text-white"
+            : toast.kind === "error"
+              ? "bg-red-600 text-white"
+              : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+        }`}
+      >
+        {toast.message}
+      </div>
+    )}
+    </>
   );
 }

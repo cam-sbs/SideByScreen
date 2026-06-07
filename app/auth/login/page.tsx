@@ -72,7 +72,7 @@ function LoginForm() {
         <div className="text-center">
           <h1 className="text-2xl font-bold">Se connecter</h1>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Connectez-vous pour retrouver votre bibliothèque
+            Connectez-vous pour retrouver votre liste
           </p>
         </div>
 

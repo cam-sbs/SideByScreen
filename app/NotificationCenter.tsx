@@ -258,13 +258,13 @@ function formatMessage(n: NotificationItem): string {
     case "film_added":
       return `${who} a ajouté le film ${title}`;
     case "film_tagged":
-      return `${who} s'est positionné sur ${title}`;
+      return `${who} est intéressé·e par ${title}`;
     case "film_untagged":
-      return `${who} a retiré son positionnement sur ${title}`;
+      return `${who} s'est désisté·e de ${title}`;
     case "film_seen":
       return `${who} a vu ${title}`;
     case "film_archived":
-      return `« ${title} » a été archivé — tous les membres l'ont vu ou retiré leur tag`;
+      return `« ${title} » a été archivé — le groupe l'a vu ou s'est désisté`;
     case "film_watched_together":
       return `${who} a confirmé avoir regardé « ${title} »`;
     case "screening_invited":

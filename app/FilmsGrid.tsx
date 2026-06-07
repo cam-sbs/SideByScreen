@@ -432,7 +432,7 @@ function QuickFilterChips({
       onClick: () => onChange({ ...filters, screenSection: "salon", consensusOnly: false }),
     },
     {
-      label: "Consensus",
+      label: "Tout le groupe ✦",
       active: filters.consensusOnly,
       onClick: () =>
         onChange({ ...filters, consensusOnly: !filters.consensusOnly, screenSection: "all" }),
@@ -586,7 +586,7 @@ function FilterControls({
         ]}
       />
       <LabeledSelect
-        label="Positionnement"
+        label="Intérêt"
         value={positioningValue}
         onChange={(v) => {
           if (v === "any") onChange({ ...filters, positioning: { kind: "any" } });
@@ -601,10 +601,10 @@ function FilterControls({
         }}
         options={[
           { value: "any", label: "Tous" },
-          { value: "me", label: "Où je suis tagué" },
+          { value: "me", label: "Où je suis intéressé·e" },
           ...members.map((m) => ({
             value: `member:${m.id}`,
-            label: `Où ${m.name} est tagué`,
+            label: `Intérêts de ${m.name}`,
           })),
         ]}
       />
@@ -777,7 +777,7 @@ function FilmCard({
 
           {film.isConsensus && (
             <span className="absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900 shadow">
-              Consensus
+              Tout le groupe ✦
             </span>
           )}
           {film.seenByMe && (
@@ -946,7 +946,7 @@ function AvatarStack({ members }: { members: GroupFilmMember[] }) {
   return (
     <div
       className="flex -space-x-2"
-      title={`Positionnés : ${members.map((m) => m.name).join(", ")}`}
+      title={`Intéressé·e·s : ${members.map((m) => m.name).join(", ")}`}
     >
       {visible.map((m) => (
         <MemberAvatar key={m.id} member={m} size={24} bordered />

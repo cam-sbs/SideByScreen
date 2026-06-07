@@ -72,7 +72,7 @@ export function TmdbSearchBar() {
     mutationFn: (movie: TMDBMovie) => addFilm(movie.id),
     onSuccess: ({ status, body }, movie) => {
       if (status === 201) {
-        setToast({ kind: "success", message: `« ${movie.title} » ajouté` });
+        setToast({ kind: "success", message: `« ${movie.title} » est dans la liste — le groupe a été notifié` });
         setAddedIds((prev) => new Set(prev).add(movie.id));
         queryClient.invalidateQueries({ queryKey: ["group-films"] });
       } else if (status === 409) {

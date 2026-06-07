@@ -247,13 +247,13 @@ export function FilmSocial({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Positionnés
+            Intéressé·e·s
           </p>
           <p className="text-sm font-medium">
             {data.taggedMembers.length} / {data.totalMembers}
             {isConsensus && (
               <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
-                Consensus
+                Tout le groupe ✦
               </span>
             )}
           </p>
@@ -297,7 +297,7 @@ export function FilmSocial({
               : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           }`}
         >
-          {optimistic.taggedByMe ? "Retirer mon tag" : "Je suis intéressé·e"}
+          {optimistic.taggedByMe ? "Retirer mon intérêt" : "Je veux le voir"}
         </button>
 
         {isSalon ? (
@@ -329,7 +329,7 @@ export function FilmSocial({
                 : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             }`}
           >
-            {optimistic.seenByMe ? "Vu ✓" : "J'ai vu ce film"}
+            {optimistic.seenByMe ? "Vu ✓" : "Marquer comme vu"}
           </button>
         )}
 
@@ -368,8 +368,8 @@ export function FilmSocial({
             <span>
               <span className="font-medium">« {movieTitle} »</span>
               {isSalon
-                ? " a été archivé — tous les membres ont confirmé l'avoir regardé"
-                : " a été archivé — tous les membres l'ont vu ou retiré leur tag"}
+                ? " a été archivé — le groupe a confirmé l'avoir regardé"
+                : " a été archivé — le groupe l'a vu ou s'est désisté"}
             </span>
           </div>
         </div>
@@ -382,10 +382,10 @@ export function FilmSocial({
           aria-modal="true"
         >
           <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl dark:bg-zinc-950">
-            <h3 className="text-base font-semibold">Retirer votre tag ?</h3>
+            <h3 className="text-base font-semibold">Retirer votre intérêt ?</h3>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Tout le groupe est actuellement positionné sur ce film. Retirer
-              votre tag cassera le consensus.
+              Tout le groupe est partant pour ce film — retirer votre intérêt
+              cassera le consensus.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -422,7 +422,7 @@ function AvatarStack({
   return (
     <div
       className="flex -space-x-2"
-      title={`${checkmarks ? "Ont confirmé" : "Positionnés"} : ${members.map((m) => m.name).join(", ")}`}
+      title={`${checkmarks ? "Ont confirmé" : "Intéressé·e·s"} : ${members.map((m) => m.name).join(", ")}`}
     >
       {visible.map((m) => (
         <MemberAvatar key={m.id} member={m} size={28} bordered checkmark={checkmarks} />

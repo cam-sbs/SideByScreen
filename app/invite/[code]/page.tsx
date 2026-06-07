@@ -106,7 +106,7 @@ export default async function InvitePage({ params }: Props) {
           href="/"
           className="flex w-full items-center justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-          Ouvrir la bibliothèque
+          Ouvrir la liste
         </Link>
       </InviteShell>
     );

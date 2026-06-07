@@ -85,7 +85,7 @@ export default async function HistoryPage() {
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {entries.length === 0
               ? "Aucun film marqué comme vu pour le moment."
-              : `${entries.length} film${entries.length > 1 ? "s" : ""} dans votre historique.`}
+              : `${entries.length} film${entries.length > 1 ? "s" : ""} marqué${entries.length > 1 ? "s" : ""} comme vu${entries.length > 1 ? "s" : ""}.`}
           </p>
         </header>
 

@@ -70,14 +70,14 @@ function LoginForm() {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Se connecter</h1>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <h1 className="text-2xl font-bold text-fog">Se connecter</h1>
+          <p className="mt-2 text-sm text-dust">
             Connectez-vous pour retrouver votre liste
           </p>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+          <div className="rounded-lg border border-urgent/20 bg-urgent-dim p-3 text-sm text-urgent">
             {error}
           </div>
         )}
@@ -87,7 +87,7 @@ function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium mb-1.5"
+              className="block text-sm font-medium text-fog-2 mb-1.5"
             >
               Email
             </label>
@@ -97,7 +97,7 @@ function LoginForm() {
               type="email"
               required
               autoComplete="email"
-              className="w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-400"
+              className="w-full rounded-lg border border-white/10 bg-ink-2 px-3 py-3 text-md text-fog placeholder:text-dust-2 outline-none hover:border-white/15 focus:border-white/22 transition-colors"
               placeholder="vous@exemple.com"
             />
           </div>
@@ -108,7 +108,7 @@ function LoginForm() {
               </label>
               <Link
                 href="/auth/forgot-password"
-                className="text-xs text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+                className="text-xs text-dust underline-offset-4 hover:underline hover:text-fog"
               >
                 Mot de passe oublié ?
               </Link>
@@ -120,14 +120,14 @@ function LoginForm() {
               required
               minLength={8}
               autoComplete="current-password"
-              className="w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-400"
+              className="w-full rounded-lg border border-white/10 bg-ink-2 px-3 py-3 text-md text-fog placeholder:text-dust-2 outline-none hover:border-white/15 focus:border-white/22 transition-colors"
               placeholder="Min. 8 caractères"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="w-full rounded-lg bg-sage px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-sage-light hover:-translate-y-px disabled:opacity-50"
           >
             {loading ? "Connexion..." : "Se connecter"}
           </button>
@@ -135,10 +135,10 @@ function LoginForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+            <div className="w-full border-t border-white/10" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-zinc-500 dark:text-zinc-400">
+            <span className="bg-ink px-2 text-dust">
               ou continuer avec
             </span>
           </div>
@@ -148,7 +148,7 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => handleOAuth("google")}
-            className="flex items-center justify-center gap-2 rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-ink-2 px-4 py-2.5 text-sm font-medium text-fog transition-colors hover:bg-ink-3 hover:border-white/15"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -173,7 +173,7 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => handleOAuth("apple")}
-            className="flex items-center justify-center gap-2 rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-ink-2 px-4 py-2.5 text-sm font-medium text-fog transition-colors hover:bg-ink-3 hover:border-white/15"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
@@ -182,11 +182,11 @@ function LoginForm() {
           </button>
         </div>
 
-        <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-center text-sm text-dust">
           Pas encore de compte ?{" "}
           <Link
             href={next ? `/auth/signup?next=${encodeURIComponent(next)}` : "/auth/signup"}
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+            className="font-medium text-fog underline-offset-4 hover:underline"
           >
             Créer un compte
           </Link>

@@ -34,8 +34,8 @@ export default async function Home() {
       <div className="mx-auto w-full max-w-6xl space-y-6 pt-4">
         <header className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">Films du groupe</h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <h1 className="text-2xl font-bold text-fog sm:text-3xl">Films du groupe</h1>
+            <p className="text-sm text-dust">
               Les films proposés à voir ensemble.
             </p>
           </div>
@@ -43,7 +43,7 @@ export default async function Home() {
             <NotificationCenter />
             <Link
               href="/profile"
-              className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+              className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-dust hover:border-white/20 hover:text-fog transition-colors"
             >
               Profil
             </Link>

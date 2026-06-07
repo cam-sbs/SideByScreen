@@ -70,11 +70,11 @@ function ScreenStatusBadge({
         )
       : null;
     return (
-      <div className="flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+      <div className="flex items-center gap-2 rounded-md bg-sage-dim border border-sage-border px-3 py-2 text-xs font-medium text-sage-light">
+        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-sage" />
         Actuellement en salle
         {days !== null && (
-          <span className="text-emerald-600 dark:text-emerald-400">
+          <span className="text-sage">
             · Sorti il y a {days} jour{days !== 1 ? "s" : ""}
           </span>
         )}
@@ -89,8 +89,8 @@ function ScreenStatusBadge({
       year: "numeric",
     });
     return (
-      <div className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+      <div className="flex items-center gap-2 rounded-md bg-warn-dim border border-warn/20 px-3 py-2 text-xs font-medium text-warn">
+        <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-warn" />
         Sort le {date}
       </div>
     );
@@ -98,7 +98,7 @@ function ScreenStatusBadge({
 
   if (screenStatus === "salon") {
     return (
-      <div className="flex items-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+      <div className="flex items-center gap-2 rounded-md bg-ink-3 px-3 py-2 text-xs font-medium text-dust">
         <span aria-hidden>🛋️</span>
         Disponible à la maison
       </div>
@@ -213,23 +213,23 @@ export function FilmSocial({
   const taggedCount = data.taggedMembers.length;
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <section className="flex flex-col gap-3 rounded-xl border border-white/6 bg-ink-2 p-4">
       <ScreenStatusBadge
         screenStatus={data.screenStatus}
         theatricalReleaseDate={data.theatricalReleaseDate}
       />
       {!isSalon && data.urgency && (
         <div
-          className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium ${
+          className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium border ${
             data.urgency.level === "red"
-              ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
-              : "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
+              ? "bg-urgent-dim border-urgent/20 text-urgent"
+              : "bg-warn-dim border-warn/20 text-warn"
           }`}
         >
           <span
             aria-hidden
             className={`inline-block h-2.5 w-2.5 rounded-full ${
-              data.urgency.level === "red" ? "bg-red-600" : "bg-orange-500"
+              data.urgency.level === "red" ? "bg-urgent" : "bg-warn"
             }`}
           />
           {data.urgency.label}
@@ -238,21 +238,21 @@ export function FilmSocial({
 
       {data.addedBy && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-zinc-500 dark:text-zinc-400">Ajouté par</span>
+          <span className="text-dust">Ajouté par</span>
           <MemberAvatar member={data.addedBy} size={24} />
-          <span className="font-medium">{data.addedBy.name}</span>
+          <span className="font-medium text-fog">{data.addedBy.name}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs uppercase tracking-wide text-dust">
             Intéressé·e·s
           </p>
-          <p className="text-sm font-medium">
+          <p className="text-sm font-medium text-fog">
             {data.taggedMembers.length} / {data.totalMembers}
             {isConsensus && (
-              <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
+              <span className="ml-2 rounded-full bg-gold-dim border border-gold/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
                 Tout le groupe ✦
               </span>
             )}
@@ -261,17 +261,17 @@ export function FilmSocial({
         {data.taggedMembers.length > 0 ? (
           <AvatarStack members={data.taggedMembers} />
         ) : (
-          <span className="text-xs text-zinc-400">Personne pour l&apos;instant</span>
+          <span className="text-xs text-dust">Personne pour l&apos;instant</span>
         )}
       </div>
 
       {isSalon && taggedCount > 0 && (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs uppercase tracking-wide text-dust">
               On l&apos;a regardé
             </p>
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-fog">
               {watchedCount} / {taggedCount}
             </p>
           </div>
@@ -281,7 +281,7 @@ export function FilmSocial({
               checkmarks
             />
           ) : (
-            <span className="text-xs text-zinc-400">Pas encore confirmé</span>
+            <span className="text-xs text-dust">Pas encore confirmé</span>
           )}
         </div>
       )}
@@ -291,10 +291,10 @@ export function FilmSocial({
           type="button"
           onClick={handleTagClick}
           disabled={mutation.isPending && pendingKind === "tag"}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
             optimistic.taggedByMe
-              ? "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-              : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+              ? "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
+              : "bg-sage text-white hover:bg-sage-light hover:-translate-y-px"
           }`}
         >
           {optimistic.taggedByMe ? "Retirer mon intérêt" : "Je veux le voir"}
@@ -309,10 +309,10 @@ export function FilmSocial({
                 optimistic.watchedTogetherByMe ||
                 (mutation.isPending && pendingKind === "watched_together")
               }
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
                 optimistic.watchedTogetherByMe
-                  ? "border border-emerald-600 bg-emerald-600 text-white cursor-default"
-                  : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  ? "border border-sage/40 bg-sage-dim text-sage-light cursor-default"
+                  : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
               }`}
             >
               {optimistic.watchedTogetherByMe ? "On l'a regardé ✓" : "On l'a regardé"}
@@ -323,10 +323,10 @@ export function FilmSocial({
             type="button"
             onClick={handleSeenClick}
             disabled={mutation.isPending && pendingKind === "seen"}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
               optimistic.seenByMe
-                ? "border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-                : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                ? "border border-sage/40 bg-sage-dim text-sage-light"
+                : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
             }`}
           >
             {optimistic.seenByMe ? "Vu ✓" : "Marquer comme vu"}
@@ -338,10 +338,10 @@ export function FilmSocial({
           onClick={handleWishClick}
           disabled={mutation.isPending && pendingKind === "wish"}
           aria-pressed={optimistic.wishedByMe}
-          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
             optimistic.wishedByMe
-              ? "border border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
-              : "border border-zinc-300 bg-white text-zinc-800 hover:border-rose-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              ? "border border-clay/30 bg-clay-dim text-clay"
+              : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
           }`}
         >
           <span aria-hidden>{optimistic.wishedByMe ? "♥" : "♡"}</span>
@@ -350,7 +350,7 @@ export function FilmSocial({
       </div>
 
       {mutation.isError && (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-urgent">
           {mutation.error instanceof Error
             ? mutation.error.message
             : "Erreur"}
@@ -363,7 +363,7 @@ export function FilmSocial({
           aria-live="polite"
           className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
         >
-          <div className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-3 text-sm text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900">
+          <div className="flex items-center gap-2 rounded-lg bg-ink-3 border border-white/8 px-4 py-3 text-sm text-fog shadow-lg">
             <span aria-hidden className="text-base">🗂️</span>
             <span>
               <span className="font-medium">« {movieTitle} »</span>
@@ -381,9 +381,9 @@ export function FilmSocial({
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl dark:bg-zinc-950">
-            <h3 className="text-base font-semibold">Retirer votre intérêt ?</h3>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="w-full max-w-sm rounded-xl border border-white/8 bg-ink-2 p-4 shadow-xl">
+            <h3 className="text-base font-semibold text-fog">Retirer votre intérêt ?</h3>
+            <p className="mt-2 text-sm text-dust">
               Tout le groupe est partant pour ce film — retirer votre intérêt
               cassera le consensus.
             </p>
@@ -391,14 +391,14 @@ export function FilmSocial({
               <button
                 type="button"
                 onClick={() => setConfirmUntag(false)}
-                className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
+                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-fog hover:border-white/20"
               >
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={confirmRemoveTag}
-                className="rounded-full bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                className="rounded-full bg-urgent-dim border border-urgent/20 px-3 py-1.5 text-sm font-medium text-urgent hover:bg-urgent/20"
               >
                 Retirer
               </button>
@@ -428,7 +428,7 @@ function AvatarStack({
         <MemberAvatar key={m.id} member={m} size={28} bordered checkmark={checkmarks} />
       ))}
       {extra > 0 && (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-zinc-200 text-[10px] font-semibold text-zinc-700 dark:border-zinc-950 dark:bg-zinc-700 dark:text-zinc-200">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-ink bg-avatar-bg text-[10px] font-semibold text-avatar-text">
           +{extra}
         </span>
       )}
@@ -448,13 +448,11 @@ function MemberAvatar({
   checkmark?: boolean;
 }) {
   const initials = getInitials(member.name);
-  const borderClass = bordered
-    ? "border-2 border-white dark:border-zinc-950"
-    : "";
+  const borderClass = bordered ? "border-2 border-ink" : "";
   return (
     <span
       style={{ width: size, height: size }}
-      className={`relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 text-[10px] font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${borderClass}`}
+      className={`relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-avatar-bg text-[10px] font-semibold text-avatar-text ${borderClass}`}
     >
       {member.avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -469,7 +467,7 @@ function MemberAvatar({
       {checkmark && (
         <span
           aria-hidden
-          className="absolute bottom-0 right-0 flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 text-[7px] text-white"
+          className="absolute bottom-0 right-0 flex h-3 w-3 items-center justify-center rounded-full bg-sage text-[7px] text-white"
         >
           ✓
         </span>

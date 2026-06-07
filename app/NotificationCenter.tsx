@@ -165,13 +165,13 @@ export function NotificationCenter() {
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-dust hover:border-white/20 hover:text-fog transition-colors"
       >
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
           <span
             aria-hidden
-            className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-zinc-950"
+            className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-urgent px-1 text-[10px] font-bold text-white ring-2 ring-ink"
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
@@ -182,37 +182,37 @@ export function NotificationCenter() {
         <div
           role="dialog"
           aria-label="Notifications"
-          className="fixed inset-x-2 top-16 z-50 max-h-[80vh] overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 sm:absolute sm:inset-auto sm:right-0 sm:top-11 sm:w-96"
+          className="fixed inset-x-2 top-16 z-50 max-h-[80vh] overflow-hidden rounded-xl border border-white/8 bg-ink-2 shadow-xl sm:absolute sm:inset-auto sm:right-0 sm:top-11 sm:w-96"
         >
-          <div className="flex items-center justify-between gap-2 border-b border-zinc-200 px-3 py-2 dark:border-zinc-800">
-            <h2 className="text-sm font-semibold">Notifications</h2>
+          <div className="flex items-center justify-between gap-2 border-b border-white/8 px-3 py-2">
+            <h2 className="text-sm font-semibold text-fog">Notifications</h2>
             <button
               type="button"
               onClick={() => markAll.mutate()}
               disabled={unreadCount === 0 || markAll.isPending}
-              className="text-xs text-zinc-500 underline disabled:opacity-40 dark:text-zinc-400"
+              className="text-xs text-dust underline disabled:opacity-40 hover:text-fog"
             >
               Tout marquer comme lu
             </button>
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {isPending ? (
-              <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="p-4 text-center text-sm text-dust">
                 Chargement…
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="p-6 text-center text-sm text-dust">
                 Aucune notification
               </div>
             ) : (
-              <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              <ul className="divide-y divide-white/6">
                 {notifications.map((n) => (
                   <li key={n.id}>
                     <button
                       type="button"
                       onClick={() => handleClick(n)}
-                      className={`flex w-full gap-3 px-3 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-900 ${
-                        n.readAt ? "" : "bg-blue-50/60 dark:bg-blue-950/30"
+                      className={`flex w-full gap-3 px-3 py-3 text-left hover:bg-ink-3 transition-colors ${
+                        n.readAt ? "" : "bg-sage-dim"
                       }`}
                     >
                       <Avatar
@@ -223,20 +223,20 @@ export function NotificationCenter() {
                         <p
                           className={`text-sm ${
                             n.readAt
-                              ? "text-zinc-600 dark:text-zinc-300"
-                              : "font-medium text-zinc-900 dark:text-zinc-100"
+                              ? "text-dust"
+                              : "font-medium text-fog"
                           }`}
                         >
                           {formatMessage(n)}
                         </p>
-                        <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                        <p className="mt-0.5 text-xs text-dust-2">
                           {formatRelative(n.createdAt)}
                         </p>
                       </div>
                       {!n.readAt && (
                         <span
                           aria-hidden
-                          className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"
+                          className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-sage"
                         />
                       )}
                     </button>
@@ -300,7 +300,7 @@ function Avatar({
 }) {
   const initials = getInitials(name);
   return (
-    <span className="relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+    <span className="relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-avatar-bg text-xs font-semibold text-avatar-text">
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

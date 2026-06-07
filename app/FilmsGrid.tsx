@@ -8,6 +8,10 @@ import type {
   GroupFilmCard,
   GroupFilmMember,
 } from "./api/group/films/route";
+import { Badge } from "@/components/ui/Badge";
+import { UrgencyDot } from "@/components/ui/UrgencyDot";
+import { AvatarStack } from "@/components/ui/Avatar";
+import { Chip } from "@/components/ui/Chip";
 
 async function fetchFilms(): Promise<GroupFilmCard[]> {
   const res = await fetch("/api/group/films", { cache: "no-store" });
@@ -224,21 +228,12 @@ export function FilmsGrid() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex gap-3 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 sm:flex-col sm:gap-0"
+            className="flex flex-col overflow-hidden rounded-xl border border-white/6 bg-ink-2"
           >
-            <div className="relative aspect-[2/3] w-24 flex-shrink-0 animate-pulse bg-zinc-200 dark:bg-zinc-800 sm:w-full" />
-            <div className="flex flex-1 flex-col justify-between gap-2 p-3">
-              <div className="space-y-2">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
-                <div className="flex -space-x-1.5">
-                  <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800 ring-2 ring-white dark:ring-zinc-950" />
-                  <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800 ring-2 ring-white dark:ring-zinc-950" />
-                </div>
-              </div>
+            <div className="relative aspect-[2/3] w-full animate-pulse bg-ink-3" />
+            <div className="flex flex-col gap-2 p-3">
+              <div className="h-4 w-3/4 animate-pulse rounded bg-ink-3" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-ink-3" />
             </div>
           </div>
         ))}
@@ -248,14 +243,14 @@ export function FilmsGrid() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
-        <p className="text-sm text-red-700 dark:text-red-400">
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-urgent/20 bg-urgent-dim p-4">
+        <p className="text-sm text-urgent">
           {error instanceof Error ? error.message : "Erreur inconnue"}
         </p>
         <button
           type="button"
           onClick={() => refetch()}
-          className="rounded-full border border-red-300 px-4 py-1.5 text-sm font-medium text-red-700 hover:border-red-500 hover:bg-red-100 dark:border-red-700 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900"
+          className="rounded-full border border-urgent/30 px-4 py-1.5 text-sm font-medium text-urgent hover:border-urgent/50 hover:bg-urgent/10"
         >
           Réessayer
         </button>
@@ -291,7 +286,7 @@ export function FilmsGrid() {
       {isEmpty ? (
         <EmptyLibrary />
       ) : totalVisible === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+        <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-dust">
           Aucun film ne correspond aux filtres.
         </div>
       ) : (
@@ -305,11 +300,11 @@ export function FilmsGrid() {
                 count={cinemaFilms.length}
               />
               {cinemaFilms.length === 0 ? (
-                <p className="text-sm text-zinc-400 dark:text-zinc-500">
+                <p className="text-sm text-dust">
                   Aucun film en salle pour le moment.
                 </p>
               ) : (
-                <ul className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {cinemaFilms.map((film) => (
                     <li key={film.id}>
                       <FilmCard film={film} showUrgency />
@@ -332,7 +327,7 @@ export function FilmsGrid() {
                 onToggle={() => setSalonCollapsed((v) => !v)}
               />
               {!salonCollapsed && salonFilms.length > 0 && (
-                <ul className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {salonFilms.map((film) => (
                     <li key={film.id}>
                       <FilmCard film={film} showUrgency={false} />
@@ -341,7 +336,7 @@ export function FilmsGrid() {
                 </ul>
               )}
               {!salonCollapsed && salonFilms.length === 0 && (
-                <p className="text-sm text-zinc-400 dark:text-zinc-500">
+                <p className="text-sm text-dust">
                   Aucun film dans cette section.
                 </p>
               )}
@@ -373,17 +368,17 @@ function SectionHeader({
       <span aria-hidden className="text-base">
         {icon}
       </span>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <h2 className="text-xs font-medium uppercase tracking-wide text-dust">
         {label}
       </h2>
-      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+      <span className="rounded-full bg-ink-3 px-2 py-0.5 text-xs text-dust">
         {count}
       </span>
       {collapsible && onToggle && (
         <button
           type="button"
           onClick={onToggle}
-          className="ml-auto flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="ml-auto flex items-center gap-1 text-xs text-dust hover:text-fog"
           aria-expanded={!collapsed}
         >
           {collapsed ? "Afficher" : "Masquer"}
@@ -403,13 +398,13 @@ function QuickFilterChips({
   filters: Filters;
   onChange: (f: Filters) => void;
 }) {
-  type Chip = {
+  type ChipItem = {
     label: string;
     active: boolean;
     onClick: () => void;
   };
 
-  const chips: Chip[] = [
+  const chips: ChipItem[] = [
     {
       label: "Tous",
       active: filters.screenSection === "all" && !filters.consensusOnly,
@@ -448,18 +443,9 @@ function QuickFilterChips({
   return (
     <div className="flex flex-wrap gap-1.5">
       {chips.map((chip) => (
-        <button
-          key={chip.label}
-          type="button"
-          onClick={chip.onClick}
-          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-            chip.active
-              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-              : "border border-zinc-200 text-zinc-600 hover:border-zinc-400 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600"
-          }`}
-        >
+        <Chip key={chip.label} active={chip.active} onClick={chip.onClick}>
           {chip.label}
-        </button>
+        </Chip>
       ))}
     </div>
   );
@@ -488,11 +474,11 @@ function FiltersBar({
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1.5 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+          className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-sm text-dust hover:border-white/20 hover:text-fog"
         >
           Filtres avancés
           {activeCount > 0 && (
-            <span className="rounded-full bg-zinc-900 px-1.5 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
+            <span className="rounded-full bg-sage px-1.5 text-xs font-semibold text-white">
               {activeCount}
             </span>
           )}
@@ -519,16 +505,16 @@ function FiltersBar({
           aria-modal="true"
         >
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 dark:bg-zinc-950">
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-ink-2 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Filtres avancés</h2>
+              <h2 className="text-lg font-semibold text-fog">Filtres avancés</h2>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="rounded-full border border-zinc-200 px-3 py-1 text-sm dark:border-zinc-800"
+                className="rounded-full border border-white/10 px-3 py-1 text-sm text-dust hover:text-fog"
               >
                 Fermer
               </button>
@@ -543,7 +529,7 @@ function FiltersBar({
               <button
                 type="button"
                 onClick={() => onChange(DEFAULT_FILTERS)}
-                className="mt-2 text-sm text-zinc-500 underline dark:text-zinc-400"
+                className="mt-2 text-sm text-dust underline"
               >
                 Réinitialiser
               </button>
@@ -679,15 +665,15 @@ function LabeledSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <label className="flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1 text-sm dark:border-zinc-800">
-      <span className="text-zinc-500 dark:text-zinc-400">{label}</span>
+    <label className="flex items-center gap-2 rounded-full border border-white/10 bg-ink-2 px-3 py-1 text-sm">
+      <span className="text-dust">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent focus:outline-none"
+        className="bg-transparent text-fog focus:outline-none"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value}>
+          <option key={o.value} value={o.value} className="bg-ink-2 text-fog">
             {o.label}
           </option>
         ))}
@@ -698,11 +684,11 @@ function LabeledSelect({
 
 function getUrgencyLevel(
   film: GroupFilmCard,
-): { level: "red" | "orange"; color: string } | null {
+): { level: "red" | "orange" } | null {
   if (film.screenStatus !== "in_theaters") return null;
   const rank = urgencyRank(film.theatricalReleaseDate);
-  if (rank === 0) return { level: "red", color: "#D94F4F" };
-  if (rank === 1) return { level: "orange", color: "#D4893A" };
+  if (rank === 0) return { level: "red" };
+  if (rank === 1) return { level: "orange" };
   return null;
 }
 
@@ -742,119 +728,120 @@ function FilmCard({
   });
 
   const urgency = showUrgency ? getUrgencyLevel(film) : null;
-
-  const borderStyle = urgency
-    ? {
-        borderLeftWidth: 3,
-        borderLeftColor: urgency.color,
-        borderLeftStyle: "solid" as const,
-      }
-    : undefined;
+  const year = film.releaseDate ? film.releaseDate.slice(0, 4) : null;
+  const taggedCount = film.taggedMembers.length;
 
   return (
-    <div className="relative">
+    <article className="relative">
       <Link
         href={`/film/${film.tmdbId}`}
-        style={borderStyle}
-        className={`group relative flex gap-3 overflow-hidden rounded-lg border bg-white transition-colors sm:flex-col sm:gap-0 dark:bg-zinc-950 ${
+        className={[
+          "group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-150",
+          "hover:-translate-y-1 hover:scale-[1.01]",
           film.isConsensus
-            ? "border-amber-400 shadow-[0_0_0_2px_rgba(251,191,36,0.35)] hover:border-amber-500 dark:border-amber-500/70"
-            : "border-zinc-200 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
-        }`}
+            ? "border-gold/22 shadow-[0_0_0_1px_rgba(196,160,90,0.30)] hover:border-gold/35"
+            : "border-white/6 hover:border-white/11",
+          film.seenByMe ? "opacity-40" : "bg-ink-2",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        <div className="relative aspect-[2/3] w-24 flex-shrink-0 bg-zinc-100 dark:bg-zinc-900 sm:w-full">
+        {/* Poster */}
+        <div className="relative aspect-[2/3] overflow-hidden bg-ink-3">
           {film.posterPath ? (
             <Image
               src={`https://image.tmdb.org/t/p/w342${film.posterPath}`}
               alt={`Affiche de ${film.title}`}
               fill
-              sizes="(max-width: 640px) 96px, (max-width: 1024px) 50vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               className="object-cover"
             />
           ) : (
             <FilmPosterPlaceholder />
           )}
 
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/25 to-transparent" />
+
+          {/* Top-right: urgency dot */}
+          {urgency && (
+            <span className="absolute right-2 top-2">
+              <UrgencyDot
+                color={urgency.level}
+                title={urgency.level === "red" ? "Risque de quitter les salles" : "À voir rapidement"}
+              />
+            </span>
+          )}
+
+          {/* Top-left: consensus badge */}
           {film.isConsensus && (
-            <span className="absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900 shadow">
-              Tout le groupe ✦
+            <span className="absolute left-2 top-2">
+              <Badge variant="gold">Tout le groupe ✦</Badge>
             </span>
           )}
+
+          {/* Seen badge */}
           {film.seenByMe && (
-            <span className="absolute right-2 top-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
-              Vu
+            <span className="absolute right-2 top-2">
+              <Badge variant="sage">Vu</Badge>
             </span>
           )}
-          {film.plannedByMe && !film.seenByMe && (
-            <span
-              title="Séance planifiée"
-              aria-label="Séance planifiée"
-              className="absolute bottom-2 left-2 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow"
-            >
-              📅 Planifié
-            </span>
-          )}
+
+          {/* Wished badge */}
           {film.wishedByMe && !film.seenByMe && (
-            <span
-              title="Dans mes souhaits"
-              aria-label="Dans mes souhaits"
-              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-xs font-semibold text-white shadow ring-2 ring-white dark:ring-zinc-950"
-            >
-              ♥
+            <span className="absolute right-2 top-2">
+              <Badge variant="muted">♥</Badge>
             </span>
           )}
 
           {/* Coming soon badge */}
           {film.screenStatus === "coming_soon" && film.theatricalReleaseDate && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-blue-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
-              Sort le {formatComingSoon(film.theatricalReleaseDate)}
+            <span className="absolute bottom-2 left-2">
+              <Badge variant="warn">
+                Sort le {formatComingSoon(film.theatricalReleaseDate)}
+              </Badge>
             </span>
           )}
 
-          {/* Urgency dot for in_theaters (legacy compat) */}
-          {urgency && (
-            <span
-              title={urgency.level === "red" ? "Risque de quitter les salles" : "À voir rapidement"}
-              aria-label={urgency.level === "red" ? "Risque de quitter les salles" : "À voir rapidement"}
-              className="absolute left-2 top-2 h-3 w-3 rounded-full shadow ring-2 ring-white dark:ring-zinc-950"
-              style={{ backgroundColor: urgency.color }}
-            />
+          {/* Planned badge */}
+          {film.plannedByMe && !film.seenByMe && (
+            <span className="absolute bottom-2 left-2">
+              <Badge variant="gold">📅 Planifié</Badge>
+            </span>
+          )}
+
+          {/* Bottom: tagged members avatar stack */}
+          {taggedCount > 0 && (
+            <div className="absolute bottom-2 right-2">
+              <AvatarStack
+                members={film.taggedMembers}
+                size="xs"
+                title={`Intéressé·e·s : ${film.taggedMembers.map((m) => m.name).join(", ")}`}
+              />
+            </div>
           )}
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-3">
-          <h3 className="line-clamp-2 text-sm font-semibold sm:text-base">
+        {/* Info */}
+        <div className="px-3 pt-2 pb-3 bg-ink-2">
+          <p className={`text-sm font-medium text-fog truncate ${film.seenByMe ? "line-through" : ""}`}>
             {film.title}
-          </h3>
-
-          <div className="flex items-center justify-between gap-2">
-            {film.addedBy ? (
-              <div
-                className="flex items-center gap-1.5"
-                title={`Ajouté par ${film.addedBy.name}`}
-              >
-                <MemberAvatar member={film.addedBy} size={24} />
-                <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                  {film.addedBy.name}
-                </span>
-              </div>
-            ) : (
-              <span />
-            )}
-
-            {film.taggedMembers.length > 0 && (
-              <AvatarStack members={film.taggedMembers} />
+          </p>
+          <div className="flex items-center justify-between mt-0.5">
+            <span className="text-xs text-dust-2">{year ?? ""}</span>
+            {taggedCount > 0 && (
+              <Badge variant="muted">{taggedCount}</Badge>
             )}
           </div>
         </div>
       </Link>
 
       {/* Context menu button */}
-      <div className="absolute bottom-2 right-2">
+      <div className="absolute bottom-[52px] right-2">
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-xs text-zinc-500 shadow hover:bg-white hover:text-zinc-900 dark:bg-zinc-900/80 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-ink-3/80 text-xs text-dust shadow hover:bg-ink-4 hover:text-fog"
           title="Options"
           aria-label="Options du film"
         >
@@ -867,37 +854,34 @@ function FilmCard({
               className="fixed inset-0 z-20"
               onClick={() => setMenuOpen(false)}
             />
-            <div className="absolute bottom-8 right-0 z-30 min-w-[180px] overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
-              {/* "Déplacer vers Salon" — disponible si screen_status !== 'salon' */}
+            <div className="absolute bottom-8 right-0 z-30 min-w-[180px] overflow-hidden rounded-lg border border-white/8 bg-ink-2 shadow-lg">
               {film.screenStatus !== "salon" && (
                 <button
                   type="button"
                   disabled={screenStatusMutation.isPending}
                   onClick={() => screenStatusMutation.mutate("move_to_salon")}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-zinc-50 disabled:opacity-60 dark:hover:bg-zinc-900"
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-fog hover:bg-ink-3 disabled:opacity-60"
                 >
                   🛋️ Déplacer vers Salon
                 </button>
               )}
-              {/* "Remettre au Cinéma" — disponible seulement si salon_override = true */}
               {film.salonOverride && (
                 <button
                   type="button"
                   disabled={screenStatusMutation.isPending}
                   onClick={() => screenStatusMutation.mutate("restore_to_cinema")}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-zinc-50 disabled:opacity-60 dark:hover:bg-zinc-900"
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-fog hover:bg-ink-3 disabled:opacity-60"
                 >
                   🎬 Remettre au Cinéma
                 </button>
               )}
-              {/* Natural salon films: no action available */}
               {film.screenStatus === "salon" && !film.salonOverride && (
-                <p className="px-4 py-2.5 text-xs text-zinc-400 dark:text-zinc-500">
+                <p className="px-4 py-2.5 text-xs text-dust">
                   Disponible à la maison
                 </p>
               )}
               {screenStatusMutation.isError && (
-                <p className="px-4 py-2 text-xs text-red-600">
+                <p className="px-4 py-2 text-xs text-urgent">
                   {screenStatusMutation.error instanceof Error
                     ? screenStatusMutation.error.message
                     : "Erreur"}
@@ -907,13 +891,13 @@ function FilmCard({
           </>
         )}
       </div>
-    </div>
+    </article>
   );
 }
 
 function FilmPosterPlaceholder() {
   return (
-    <div className="flex h-full w-full items-center justify-center text-zinc-300 dark:text-zinc-700">
+    <div className="flex h-full w-full items-center justify-center text-dust-2">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -939,69 +923,6 @@ function FilmPosterPlaceholder() {
   );
 }
 
-function AvatarStack({ members }: { members: GroupFilmMember[] }) {
-  const visible = members.slice(0, 3);
-  const extra = members.length - visible.length;
-
-  return (
-    <div
-      className="flex -space-x-2"
-      title={`Intéressé·e·s : ${members.map((m) => m.name).join(", ")}`}
-    >
-      {visible.map((m) => (
-        <MemberAvatar key={m.id} member={m} size={24} bordered />
-      ))}
-      {extra > 0 && (
-        <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-zinc-200 text-[10px] font-semibold text-zinc-700 dark:border-zinc-950 dark:bg-zinc-700 dark:text-zinc-200">
-          +{extra}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function MemberAvatar({
-  member,
-  size,
-  bordered = false,
-}: {
-  member: GroupFilmMember;
-  size: number;
-  bordered?: boolean;
-}) {
-  const initials = getInitials(member.name);
-  const borderClass = bordered
-    ? "border-2 border-white dark:border-zinc-950"
-    : "";
-  return (
-    <span
-      style={{ width: size, height: size }}
-      className={`relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 text-[10px] font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${borderClass}`}
-    >
-      {member.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={member.avatarUrl}
-          alt={`Avatar de ${member.name}`}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        initials
-      )}
-    </span>
-  );
-}
-
-function getInitials(source: string): string {
-  const clean = source.trim();
-  if (!clean) return "?";
-  const parts = clean.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return clean.slice(0, 2).toUpperCase();
-}
-
 function EmptyLibrary() {
   const queryClient = useQueryClient();
   const seed = useMutation({
@@ -1020,18 +941,18 @@ function EmptyLibrary() {
   });
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-dust">
       <p>Aucun film dans votre groupe pour le moment.</p>
       <button
         type="button"
         onClick={() => seed.mutate()}
         disabled={seed.isPending}
-        className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-500 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+        className="rounded-full border border-white/10 px-4 py-1.5 text-sm font-medium text-fog hover:border-white/20 disabled:opacity-60"
       >
         {seed.isPending ? "Ajout…" : "Ajouter 2 films aléatoires (test)"}
       </button>
       {seed.isError && (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-urgent">
           {seed.error instanceof Error ? seed.error.message : "Erreur"}
         </p>
       )}

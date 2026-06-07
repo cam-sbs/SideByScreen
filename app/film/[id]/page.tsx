@@ -50,8 +50,8 @@ export default async function FilmPage({ params }: Props) {
     console.error("[film] getMovieDetails failed", error);
     return (
       <FilmShell>
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
-          <p className="text-sm text-red-700 dark:text-red-400">
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-urgent/20 bg-urgent-dim p-4">
+          <p className="text-sm text-urgent">
             Impossible de charger ce film pour le moment.
           </p>
           <RetryButton />
@@ -81,14 +81,14 @@ export default async function FilmPage({ params }: Props) {
             sizes="100vw"
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent dark:from-zinc-950 dark:via-zinc-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-transparent" />
         </div>
       )}
 
       <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 lg:px-10">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="inline-flex items-center gap-1 text-sm text-dust hover:text-fog transition-colors"
         >
           ← Retour
         </Link>
@@ -96,7 +96,7 @@ export default async function FilmPage({ params }: Props) {
 
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pb-10 sm:px-6 lg:flex-row lg:gap-10 lg:px-10">
         <div className="mx-auto w-48 flex-shrink-0 sm:w-64 lg:mx-0">
-          <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-100 shadow-lg dark:bg-zinc-900">
+          <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-ink-3 shadow-lg">
             {movie.poster_path ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -139,7 +139,7 @@ export default async function FilmPage({ params }: Props) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-dust">
             <span
               className="inline-flex items-center gap-1"
               title={`${movie.vote_count} votes`}
@@ -148,7 +148,7 @@ export default async function FilmPage({ params }: Props) {
               <span className="font-semibold">
                 {movie.vote_average.toFixed(1)}
               </span>
-              <span className="text-zinc-400">/10</span>
+              <span className="text-dust-2">/10</span>
             </span>
             {movie.runtime > 0 && (
               <span>{formatRuntime(movie.runtime)}</span>
@@ -165,7 +165,7 @@ export default async function FilmPage({ params }: Props) {
               {movie.genres.map((g) => (
                 <span
                   key={g.id}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs dark:border-zinc-800"
+                  className="rounded-full border border-white/10 bg-ink-3 px-3 py-1 text-xs text-dust"
                 >
                   {g.name}
                 </span>
@@ -175,7 +175,7 @@ export default async function FilmPage({ params }: Props) {
 
           {directors.length > 0 && (
             <p className="text-sm">
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-dust">
                 {directors.length > 1 ? "Réalisateurs : " : "Réalisateur : "}
               </span>
               <span className="font-medium">
@@ -186,7 +186,7 @@ export default async function FilmPage({ params }: Props) {
 
           {movie.overview && (
             <div className="space-y-1">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-dust">
                 Synopsis
               </h2>
               <p className="text-sm leading-relaxed sm:text-base">
@@ -197,16 +197,16 @@ export default async function FilmPage({ params }: Props) {
 
           {cast.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-dust">
                 Casting
               </h2>
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {cast.map((actor) => (
                   <li
                     key={actor.id}
-                    className="flex items-center gap-2 rounded-lg border border-zinc-200 p-2 dark:border-zinc-800"
+                    className="flex items-center gap-2 rounded-lg border border-white/6 bg-ink-2 p-2"
                   >
-                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-ink-3">
                       {actor.profile_path ? (
                         <Image
                           src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
@@ -218,11 +218,11 @@ export default async function FilmPage({ params }: Props) {
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
+                      <p className="truncate text-sm font-medium text-fog">
                         {actor.name}
                       </p>
                       {actor.character && (
-                        <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                        <p className="truncate text-xs text-dust">
                           {actor.character}
                         </p>
                       )}
@@ -255,7 +255,7 @@ async function FilmSocialSection({
 
 function FilmSocialSkeleton() {
   return (
-    <div className="h-28 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
+    <div className="h-28 animate-pulse rounded-lg border border-white/6 bg-ink-2" />
   );
 }
 
@@ -375,7 +375,7 @@ function formatRuntime(minutes: number): string {
 
 function PosterPlaceholder({ label }: { label?: string }) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-300 dark:text-zinc-700">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-dust-2">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="36"
@@ -398,7 +398,7 @@ function PosterPlaceholder({ label }: { label?: string }) {
         <line x1="17" y1="17" x2="22" y2="17" />
       </svg>
       {label && (
-        <span className="text-xs text-zinc-400 dark:text-zinc-600">{label}</span>
+        <span className="text-xs text-dust">{label}</span>
       )}
     </div>
   );
@@ -409,7 +409,7 @@ function FilmShell({ children }: { children: React.ReactNode }) {
     <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 sm:px-6">
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="inline-flex items-center gap-1 text-sm text-dust hover:text-fog transition-colors"
       >
         ← Retour
       </Link>

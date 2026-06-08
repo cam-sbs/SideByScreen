@@ -66,6 +66,29 @@ export async function joinGroup(formData: FormData): Promise<ActionResult> {
   return { success: true };
 }
 
+export async function leaveGroup(): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Session expirée. Veuillez vous reconnecter." };
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .update({ group_id: null })
+    .eq("id", user.id);
+
+  if (error) {
+    return { error: "Une erreur est survenue. Veuillez réessayer." };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
 function extractInviteCode(input: string): string | null {
   const trimmed = input.trim();
 

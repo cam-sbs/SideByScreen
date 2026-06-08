@@ -4,6 +4,7 @@ import { logout } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
 import { ResetPasswordButton } from "./ResetPasswordButton";
+import { LeaveGroupButton } from "./LeaveGroupButton";
 
 type Props = {
   searchParams: Promise<{ next?: string }>;
@@ -97,6 +98,7 @@ export default async function ProfilePage({ searchParams }: Props) {
             </span>
           </Link>
           {user.email && <ResetPasswordButton email={user.email} />}
+          {groupName && <LeaveGroupButton groupName={groupName} />}
           <form action={logout}>
             <button
               type="submit"

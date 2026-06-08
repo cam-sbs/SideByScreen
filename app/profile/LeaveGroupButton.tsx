@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { leaveGroup } from "@/app/actions/groups";
 
 type Props = {
@@ -9,7 +8,6 @@ type Props = {
 };
 
 export function LeaveGroupButton({ groupName }: Props) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +21,7 @@ export function LeaveGroupButton({ groupName }: Props) {
         setConfirming(false);
         return;
       }
-      router.push("/onboarding");
+      window.location.href = "/onboarding";
     });
   }
 

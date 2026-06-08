@@ -67,6 +67,7 @@ const config = {
         xl: ['18px', { lineHeight: '1.3' }],
         '2xl': ['20px', { lineHeight: '1.2' }],
         '3xl': ['26px', { lineHeight: '1.1' }],
+        '4xl': ['32px', { lineHeight: '1.1' }],
         display: ['34px', { lineHeight: '1.0' }],
       },
     },

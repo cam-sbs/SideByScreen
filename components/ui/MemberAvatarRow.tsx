@@ -9,26 +9,26 @@ export type MemberInterest = {
 
 type MemberAvatarRowProps = {
   interests: MemberInterest[];
-  size?: "xs" | "sm";
 };
 
-export function MemberAvatarRow({ interests, size = "sm" }: MemberAvatarRowProps) {
+export function MemberAvatarRow({ interests }: MemberAvatarRowProps) {
   const visibleMembers = interests.filter((i) => i.isTagged);
   if (visibleMembers.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-1">
-      {visibleMembers.map(({ member, isFavorite }) => (
+    <div className="flex items-center">
+      {visibleMembers.map(({ member, isFavorite }, i) => (
         <div
           key={member.id}
           className={[
-            "inline-flex rounded-full",
+            "inline-flex rounded-full shrink-0",
             isFavorite ? "ring-2 ring-gold ring-offset-1 ring-offset-ink-2" : "",
           ]
             .filter(Boolean)
             .join(" ")}
+          style={{ marginLeft: i > 0 ? "-22px" : "0", zIndex: visibleMembers.length - i }}
         >
-          <Avatar name={member.name} avatarUrl={member.avatarUrl} size={size} />
+          <Avatar name={member.name} avatarUrl={member.avatarUrl} size="lg" bordered />
         </div>
       ))}
     </div>

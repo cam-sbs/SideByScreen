@@ -75,7 +75,7 @@ function LoginForm() {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-fog">Se connecter</h1>
+          <h1 className="text-4xl font-bold text-fog">Se connecter</h1>
           <p className="mt-2 text-sm text-dust">
             Connectez-vous pour retrouver votre liste
           </p>

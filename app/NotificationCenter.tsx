@@ -165,9 +165,9 @@ export function NotificationCenter() {
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-dust hover:border-white/20 hover:text-fog transition-colors"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full text-dust hover:text-fog transition-colors"
       >
-        <BellIcon className="h-5 w-5" />
+        <BellIcon className="h-6 w-6" />
         {unreadCount > 0 && (
           <span
             aria-hidden

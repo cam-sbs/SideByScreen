@@ -79,7 +79,7 @@ export default async function HistoryPage() {
           >
             ← Profil
           </Link>
-          <h1 className="text-2xl font-bold sm:text-3xl">
+          <h1 className="text-4xl font-bold">
             Mes films vus
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

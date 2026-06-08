@@ -71,7 +71,7 @@ export default async function GroupPage() {
           >
             ← Profil
           </Link>
-          <h1 className="text-2xl font-bold sm:text-3xl">{group.name}</h1>
+          <h1 className="text-4xl font-bold">{group.name}</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Gérez les membres et l&apos;invitation de votre groupe.
           </p>

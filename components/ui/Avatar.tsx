@@ -3,7 +3,7 @@ type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 const sizeMap: Record<AvatarSize, { cls: string; textCls: string }> = {
   xs: { cls: "h-5 w-5",   textCls: "text-[8px]"  },
   sm: { cls: "h-7 w-7",   textCls: "text-[10px]" },
-  md: { cls: "h-9 w-9",   textCls: "text-xs"     },
+  md: { cls: "h-10 w-10", textCls: "text-xs"     },
   lg: { cls: "h-12 w-12", textCls: "text-sm"     },
   xl: { cls: "h-16 w-16", textCls: "text-base"   },
 };

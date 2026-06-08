@@ -52,7 +52,7 @@ export default async function ProfilePage({ searchParams }: Props) {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-4xl font-bold">
             {isFirstTime ? "Complétez votre profil" : "Mon profil"}
           </h1>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">

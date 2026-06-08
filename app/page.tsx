@@ -42,7 +42,7 @@ export default async function Home() {
         userName={profile.name ?? user.email ?? "?"}
         userAvatarUrl={profile.avatar_url ?? null}
       />
-      <main className="max-w-screen-sm mx-auto pt-[52px]">
+      <main className="max-w-screen-sm mx-auto pt-[72px]">
         <FilmsLibrary groupName={group.name} currentUserId={user.id} />
       </main>
     </div>

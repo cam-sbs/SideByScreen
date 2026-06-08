@@ -73,6 +73,8 @@
   --text-2xl--line-height: 1.2;
   --text-3xl: 26px;
   --text-3xl--line-height: 1.1;
+  --text-4xl: 32px;
+  --text-4xl--line-height: 1.1;
   --text-display: 34px;
   --text-display--line-height: 1.0;
 }

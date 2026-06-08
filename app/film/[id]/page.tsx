@@ -118,7 +118,7 @@ export default async function FilmPage({ params }: Props) {
           {/* [STAND-BY] Agenda */}
 
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold sm:text-3xl">
+            <h1 className="text-4xl font-bold">
               {movie.title}
               {year && (
                 <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">

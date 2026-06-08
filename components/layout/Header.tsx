@@ -24,7 +24,7 @@ export function Header({ userName, userAvatarUrl }: HeaderProps) {
       <div className="flex items-center gap-3">
         <NotificationCenter />
         <Link href="/profile" aria-label="Mon profil">
-          <Avatar name={userName} avatarUrl={userAvatarUrl} size="sm" />
+          <Avatar name={userName} avatarUrl={userAvatarUrl} size="md" />
         </Link>
       </div>
     </header>

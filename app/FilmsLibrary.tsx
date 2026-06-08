@@ -71,16 +71,6 @@ function toInterests(film: GroupFilmCard, currentUserId: string): MemberInterest
 
 // ——— Icons ———
 
-function ArrowsRightLeftIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M8 3 4 7l4 4" />
-      <path d="M4 7h16" />
-      <path d="m16 21 4-4-4-4" />
-      <path d="M20 17H4" />
-    </svg>
-  );
-}
 
 function MagnifyingGlassIcon({ className }: { className?: string }) {
   return (
@@ -227,16 +217,9 @@ export function FilmsLibrary({ groupName, currentUserId }: FilmsLibraryProps) {
 
   return (
     <>
-      {/* Group name + switch */}
-      <div className="flex items-center gap-2 px-4 pt-4 pb-3">
-        <h1 className="font-serif text-2xl text-fog">{groupName}</h1>
-        <button
-          type="button"
-          className="text-dust hover:text-fog transition-colors"
-          aria-label="Changer de groupe"
-        >
-          <ArrowsRightLeftIcon />
-        </button>
+      {/* Group name */}
+      <div className="px-4 pt-4 pb-3">
+        <h1 className="font-serif text-4xl text-fog">{groupName}</h1>
       </div>
 
       {/* Tab switcher */}
@@ -302,11 +285,11 @@ export function FilmsLibrary({ groupName, currentUserId }: FilmsLibraryProps) {
       </div>
 
       {/* Sticky add button */}
-      <div className="fixed bottom-0 inset-x-0 z-50 px-4 pb-[env(safe-area-inset-bottom)] pt-3 bg-gradient-to-t from-ink via-ink/90 to-transparent pointer-events-none">
+      <div className="fixed bottom-0 inset-x-0 z-50 px-4 pb-[env(safe-area-inset-bottom)] pt-3 bg-gradient-to-t from-ink via-ink/80 to-transparent">
         <button
           type="button"
           onClick={() => setTmdbSearchOpen(true)}
-          className="pointer-events-auto w-full flex items-center justify-center gap-2 bg-ink text-fog font-medium text-md rounded-full py-4 border border-white/12 hover:border-white/20 hover:bg-ink-2 active:scale-[0.98] transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 bg-sage text-white font-medium text-md rounded-full py-4 hover:bg-sage-light active:scale-[0.98] transition-all duration-200"
         >
           <PlusIcon />
           Ajouter un film

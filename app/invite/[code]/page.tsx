@@ -67,7 +67,7 @@ export default async function InvitePage({ params }: Props) {
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Vous êtes invité à rejoindre
           </p>
-          <h1 className="text-2xl font-bold">{group.name}</h1>
+          <h1 className="text-4xl font-bold">{group.name}</h1>
         </div>
         <div className="space-y-3">
           <Link
@@ -97,7 +97,7 @@ export default async function InvitePage({ params }: Props) {
     return (
       <InviteShell>
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">{group.name}</h1>
+          <h1 className="text-4xl font-bold">{group.name}</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Vous êtes déjà membre de ce groupe.
           </p>
@@ -135,7 +135,7 @@ export default async function InvitePage({ params }: Props) {
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Vous êtes invité à rejoindre
         </p>
-        <h1 className="text-2xl font-bold">{group.name}</h1>
+        <h1 className="text-4xl font-bold">{group.name}</h1>
       </div>
       <InviteActions code={code} />
     </InviteShell>
@@ -153,7 +153,7 @@ function InviteShell({ children }: { children: React.ReactNode }) {
 function InviteError({ title, message }: { title: string; message: string }) {
   return (
     <div className="space-y-3 text-center">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-4xl font-bold">{title}</h1>
       <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
         {message}
       </p>

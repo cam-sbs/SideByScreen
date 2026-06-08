@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TMDBMovie, TMDBSearchResult } from "@/lib/tmdb";
+import { Spinner } from "@/components/ui/Spinner";
 
 async function searchTmdb(query: string): Promise<TMDBSearchResult> {
   const res = await fetch(
@@ -188,13 +189,23 @@ export function TmdbSearchBar() {
                           type="button"
                           onClick={() => !isAdded && addMutation.mutate(movie)}
                           disabled={isPending || addMutation.isPending || isAdded}
-                          className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
+                          aria-busy={isPending}
+                          className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
                             isAdded
                               ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white"
                               : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
                           }`}
                         >
-                          {isPending ? "Ajout…" : isAdded ? "Ajouté" : "Ajouter"}
+                          {isPending ? (
+                            <>
+                              <Spinner size="sm" />
+                              Ajout…
+                            </>
+                          ) : isAdded ? (
+                            "Ajouté ✓"
+                          ) : (
+                            "Ajouter"
+                          )}
                         </button>
                       </div>
                     </li>

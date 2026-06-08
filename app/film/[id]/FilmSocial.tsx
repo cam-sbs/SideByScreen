@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Spinner } from "@/components/ui/Spinner";
 
 export type FilmSocialMember = {
   id: string;
@@ -286,18 +287,28 @@ export function FilmSocial({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" aria-busy={mutation.isPending}>
         <button
           type="button"
           onClick={handleTagClick}
           disabled={mutation.isPending && pendingKind === "tag"}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
+          aria-disabled={mutation.isPending && pendingKind === "tag"}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
             optimistic.taggedByMe
               ? "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
               : "bg-sage text-white hover:bg-sage-light hover:-translate-y-px"
           }`}
         >
-          {optimistic.taggedByMe ? "Retirer mon intérêt" : "Je veux le voir"}
+          {mutation.isPending && pendingKind === "tag" ? (
+            <>
+              <Spinner size="sm" />
+              {optimistic.taggedByMe ? "Retrait…" : "Ajout…"}
+            </>
+          ) : optimistic.taggedByMe ? (
+            "Retirer mon intérêt"
+          ) : (
+            "Je veux le voir"
+          )}
         </button>
 
         {isSalon ? (
@@ -309,13 +320,23 @@ export function FilmSocial({
                 optimistic.watchedTogetherByMe ||
                 (mutation.isPending && pendingKind === "watched_together")
               }
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
+              aria-disabled={mutation.isPending && pendingKind === "watched_together"}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
                 optimistic.watchedTogetherByMe
                   ? "border border-sage/40 bg-sage-dim text-sage-light cursor-default"
                   : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
               }`}
             >
-              {optimistic.watchedTogetherByMe ? "On l'a regardé ✓" : "On l'a regardé"}
+              {mutation.isPending && pendingKind === "watched_together" ? (
+                <>
+                  <Spinner size="sm" />
+                  Confirmation…
+                </>
+              ) : optimistic.watchedTogetherByMe ? (
+                "On l'a regardé ✓"
+              ) : (
+                "On l'a regardé"
+              )}
             </button>
           )
         ) : (
@@ -323,13 +344,23 @@ export function FilmSocial({
             type="button"
             onClick={handleSeenClick}
             disabled={mutation.isPending && pendingKind === "seen"}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
+            aria-disabled={mutation.isPending && pendingKind === "seen"}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
               optimistic.seenByMe
                 ? "border border-sage/40 bg-sage-dim text-sage-light"
                 : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
             }`}
           >
-            {optimistic.seenByMe ? "Vu ✓" : "Marquer comme vu"}
+            {mutation.isPending && pendingKind === "seen" ? (
+              <>
+                <Spinner size="sm" />
+                Enregistrement…
+              </>
+            ) : optimistic.seenByMe ? (
+              "Vu ✓"
+            ) : (
+              "Marquer comme vu"
+            )}
           </button>
         )}
 
@@ -338,14 +369,24 @@ export function FilmSocial({
           onClick={handleWishClick}
           disabled={mutation.isPending && pendingKind === "wish"}
           aria-pressed={optimistic.wishedByMe}
+          aria-disabled={mutation.isPending && pendingKind === "wish"}
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-60 ${
             optimistic.wishedByMe
               ? "border border-clay/30 bg-clay-dim text-clay"
               : "border border-white/10 bg-ink-3 text-fog hover:border-white/20 hover:bg-ink-4"
           }`}
         >
-          <span aria-hidden>{optimistic.wishedByMe ? "♥" : "♡"}</span>
-          {optimistic.wishedByMe ? "Dans mes souhaits" : "Ajouter aux souhaits"}
+          {mutation.isPending && pendingKind === "wish" ? (
+            <>
+              <Spinner size="sm" />
+              Enregistrement…
+            </>
+          ) : (
+            <>
+              <span aria-hidden>{optimistic.wishedByMe ? "♥" : "♡"}</span>
+              {optimistic.wishedByMe ? "Dans mes souhaits" : "Ajouter aux souhaits"}
+            </>
+          )}
         </button>
       </div>
 

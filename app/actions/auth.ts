@@ -69,14 +69,16 @@ export async function login(formData: FormData) {
   redirect(next ?? "/");
 }
 
-export async function loginWithOAuth(provider: "google" | "apple") {
+export async function loginWithOAuth(provider: "google" | "apple", next?: string | null) {
   const supabase = await createClient();
+
+  const base = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`;
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const redirectTo = safeNext ? `${base}?next=${encodeURIComponent(safeNext)}` : base;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
-    },
+    options: { redirectTo },
   });
 
   if (error) {

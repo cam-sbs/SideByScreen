@@ -59,6 +59,7 @@ export async function joinGroup(formData: FormData): Promise<ActionResult> {
   const { error } = await supabase.rpc("join_group_by_code", { code });
 
   if (error) {
+    console.error("[joinGroup] join_group_by_code failed", { code, message: error.message });
     return { error: mapGroupRpcError(error.message) };
   }
 

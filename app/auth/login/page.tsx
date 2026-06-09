@@ -63,7 +63,7 @@ function LoginForm() {
   async function handleOAuth(provider: "google" | "apple") {
     setError(null);
     setOauthLoading(provider);
-    const result = await loginWithOAuth(provider);
+    const result = await loginWithOAuth(provider, next);
     if (result?.error) {
       setError(result.error);
       setOauthLoading(null);

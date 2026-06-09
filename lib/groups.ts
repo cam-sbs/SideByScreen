@@ -1,6 +1,6 @@
 export function mapGroupRpcError(message: string): string {
   if (message.includes("INVITE_CODE_NOT_FOUND")) {
-    return "Code d'invitation introuvable.";
+    return "Ce lien n'est plus valide.";
   }
   if (message.includes("INVITE_CODE_REQUIRED")) {
     return "Le code d'invitation est obligatoire.";
@@ -12,7 +12,7 @@ export function mapGroupRpcError(message: string): string {
     return "Le nom du groupe ne doit pas dépasser 50 caractères.";
   }
   if (message.includes("ALREADY_IN_GROUP")) {
-    return "Vous appartenez déjà à un groupe.";
+    return "Vous êtes déjà dans un groupe.";
   }
   if (message.includes("UNAUTHENTICATED")) {
     return "Session expirée. Veuillez vous reconnecter.";
